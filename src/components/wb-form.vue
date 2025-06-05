@@ -8,28 +8,28 @@
         }" @submit.prevent="onSubmit">
           <div class="row g-3">
             <div class="col-md-12">
-              <label for="location" class="form-label">Место хранения</label>
+              <label for="location" class="form-label">ШК</label>
               <div class="d-flex">
                 <input v-model="location" type="text" class="form-control" autofocus id="location" name="location" required>
                 <span @click.prevent="location = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-12">
-              <label for="barcode1" class="form-label">Баркод 1</label>
+              <label for="barcode1" class="form-label">Недостача</label>
               <div class="d-flex">
                 <input v-model="barcode1" type="text" class="form-control" id="barcode1" name="barcode[]" >
                 <span @click.prevent="barcode1 = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-12">
-              <label for="barcode2" class="form-label">Баркод 2</label>
+              <label for="barcode2" class="form-label">Излишек</label>
               <div class="d-flex">
                 <input v-model="barcode2" type="text" class="form-control" id="barcode2" name="barcode[]" >
                 <span @click.prevent="barcode2 = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-12">
-              <label for="barcode3" class="form-label">Баркод 3</label>
+              <label for="barcode3" class="form-label">через ДА</label>
               <div class="d-flex">
                 <input v-model="barcode3" type="text" class="form-control" id="barcode3" name="barcode[]" >
                 <span @click.prevent="barcode3 = ''" class="btn btn-warning">x</span>
@@ -37,27 +37,27 @@
             </div>
 
             <div class="col-md-6">
-              <label for="palette" class="form-label">Палета</label>
+              <label for="palette" class="form-label">Обезличка ШК</label>
               <div class="d-flex">
                 <input v-model="palette" type="text" class="form-control" id="palette" name="palette">
                 <span @click.prevent="palette = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-6">
-              <label for="wb-box" class="form-label">WB Короб</label>
+              <label for="wb-box" class="form-label">Обезличка видео</label>
               <div class="d-flex">
                 <input v-model="wbBox" type="text" class="form-control" id="wb-box" name="wb-box">
               </div>
             </div>
             <div class="col-md-6">
-              <label for="count" class="form-label">Количество</label>
+              <label for="count" class="form-label">ID сотрудника</label>
               <div class="d-flex">
                 <input v-model="count" type="number" class="form-control" id="count" name="count">
                 <span @click.prevent="count = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-6">
-              <label for="product-name" class="form-label">Наименование товара</label>
+              <label for="product-name" class="form-label">№ Стола Приемки</label>
               <div class="d-flex">
                 <input v-model="productName" type="text" class="form-control" id="product-name" name="product-name">
                 <span @click.prevent="productName = ''" class="btn btn-warning">x</span>
