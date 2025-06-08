@@ -3,7 +3,9 @@
     <div class="row justify-content-center">
       <div class="col-lg-9">
         <h1 class="mb-3">Отписки сотрудников</h1>
-        <form :class="{
+        <form
+            ref="formRef"
+            :class="{
           'opacity-50':isLoading
         }" @submit.prevent="onSubmit">
           <div class="row g-3">
@@ -81,7 +83,7 @@
             <div class="col-12">
               <div class="row">
                 <div class="col-12">
-                  <button :disabled="isLoading" type="submit" class="btn btn-dark w-100 fw-bold" >Отправить</button>
+                  <button :disabled="!canSubmit" type="button" @click.prevent="trySubmit" class="btn btn-dark w-100 fw-bold" >Отправить</button>
                 </div>
               </div>
             </div>
@@ -89,11 +91,21 @@
         </form>
       </div>
     </div>
+
+    <Confirm
+        v-if="confirmSelect"
+        title="Подтверждение отправки"
+        message="Вы действительно хотите отправить форму?"
+        @accept="() => makeSubmit()"
+        @cancel="confirmSelect = false;"
+    />
   </div>
 </template>
 <script lang="ts" setup>
-import {ref} from "vue";
+import {computed, ref} from "vue";
+import Confirm from "@/components/Confirm.vue";
 
+const formRef = ref<HTMLFormElement>();
 const barcode = ref<string>();
 const shortage = ref<string>();
 const surplus = ref<string>();
@@ -104,11 +116,38 @@ const worker = ref<string>();
 const table = ref<string>();
 const reason = ref<string>();
 const count = ref<string>();
+const confirmSelect = ref<boolean>(false);
 
 const isLoading = ref(false);
 
-const onSubmit = async (event:any) => {
-  const formData = new FormData(event.target);
+const canSubmit = computed(() => {
+  return barcode.value &&
+      shortage.value &&
+      surplus.value &&
+      through.value &&
+      depersonalizationBarcode.value &&
+      depersonalizationVideo.value &&
+      worker.value &&
+      table.value &&
+      reason.value &&
+      count.value &&
+      !isLoading.value
+});
+
+const trySubmit = () => {
+  confirmSelect.value = true;
+}
+
+const makeSubmit = () => {
+  if(formRef.value){
+    onSubmit();
+  }
+  confirmSelect.value = false;
+}
+
+const onSubmit = async () => {
+  const formData = new FormData();
+
   isLoading.value = true;
   try{
     const res = await fetch('/add-result.php', {
