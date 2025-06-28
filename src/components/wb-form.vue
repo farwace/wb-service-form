@@ -10,27 +10,32 @@
         }" @submit.prevent="onSubmit">
           <div class="row g-3">
             <div class="col-md-12">
+              <button type="button" class="btn" :class="{'btn-success': type === 'ob', 'btn-secondary': type != 'ob'}" @click="() => type = 'ob'">Обезличка</button>
+              &nbsp;
+              <button type="button" class="btn" :class="{'btn-success': type === 'ot', 'btn-secondary': type != 'ot'}" @click="() => type = 'ot'">Отписка</button>
+            </div>
+            <div class="col-md-12">
               <label for="barcode" class="form-label">ШК<sup class="text-danger">*</sup></label>
               <div class="d-flex">
                 <input v-model="barcode" type="text" class="form-control" autofocus id="barcode" name="barcode" required>
                 <span @click.prevent="barcode = ''" class="btn btn-warning">x</span>
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6" v-show="type==='ot'">
               <label for="shortage" class="form-label">Недостача</label>
               <div class="d-flex">
                 <input v-model="shortage" type="number" inputmode="numeric" class="form-control" id="shortage" name="shortage" >
                 <span @click.prevent="shortage = ''" class="btn btn-warning">x</span>
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6" v-show="type==='ot'">
               <label for="surplus" class="form-label">Излишек</label>
               <div class="d-flex">
                 <input v-model="surplus" type="number" inputmode="numeric" class="form-control" id="surplus" name="surplus" >
                 <span @click.prevent="surplus = ''" class="btn btn-warning">x</span>
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6" v-show="type==='ot'">
               <label for="through" class="form-label">через «Да»</label>
               <div class="d-flex">
                 <input v-model="through" type="number" inputmode="numeric" class="form-control" id="through" name="through" >
@@ -38,13 +43,6 @@
               </div>
             </div>
 
-            <div class="col-md-6">
-              <label for="depersonalization-barcode" class="form-label">Обезличка ШК</label>
-              <div class="d-flex">
-                <input v-model="depersonalizationBarcode" inputmode="numeric" type="number" class="form-control" id="depersonalization-barcode" name="depersonalization-barcode">
-                <span @click.prevent="depersonalizationBarcode = ''" class="btn btn-warning">x</span>
-              </div>
-            </div>
             <div class="col-md-6">
               <label for="worker" class="form-label">ID сотрудника<sup class="text-danger">*</sup></label>
               <div class="d-flex">
@@ -59,21 +57,21 @@
                 <span @click.prevent="table = ''" class="btn btn-warning">x</span>
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6" v-show="type==='ob'">
               <label for="reason" class="form-label">Причина обезлички</label>
               <div class="d-flex">
                 <input v-model="reason" type="text" class="form-control" id="reason" name="reason">
                 <span @click.prevent="reason = ''" class="btn btn-warning">x</span>
               </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6" v-show="type==='ob'">
               <label for="count" class="form-label">Количество</label>
               <div class="d-flex">
                 <input v-model="count" type="number" inputmode="numeric" class="form-control" id="count" name="count">
                 <span @click.prevent="count = ''" class="btn btn-warning">x</span>
               </div>
             </div>
-            <div class="col-md-12">
+            <div class="col-md-12" v-show="type==='ob'">
               <label for="depersonalization-video" class="form-label">Обезличка видео</label>
               <div class="d-flex flex-column">
                 <!-- Файл-инпут: сразу открывает камеру на планшете + позволяет выбрать несколько -->
@@ -104,9 +102,6 @@
               <div class="row">
                 <div class="col-12">
                   <button :disabled="!canSubmit" type="button" @click.prevent="trySubmit" class="btn btn-dark w-100 fw-bold" >Отправить</button>
-                </div>
-                <div class="col-12 small text-danger" v-if="!canSubmit && !isLoading">
-                  Заполните все поля!
                 </div>
               </div>
             </div>
@@ -144,12 +139,13 @@
 import {computed, ref} from "vue";
 import Confirm from "@/components/Confirm.vue";
 
+const type = ref<string>('ob');
+
 const formRef = ref<HTMLFormElement>();
 const barcode = ref<string>();
 const shortage = ref<string>();
 const surplus = ref<string>();
 const through = ref<string>();
-const depersonalizationBarcode = ref<string>();
 const worker = ref<string>();
 const table = ref<string>();
 const reason = ref<string>();
@@ -210,7 +206,6 @@ const clearData = () => {
   shortage.value = val;
   surplus.value = val;
   through.value = val;
-  depersonalizationBarcode.value = val;
   worker.value = val;
   table.value = val;
   reason.value = val;
@@ -228,16 +223,23 @@ clearData();
 const onSubmit = async () => {
   const formData = new FormData();
 
+  let typeValue = '';
+  if(type.value === 'ob'){
+    typeValue = 'Обезличка';
+  }
+  if(type.value === 'ot'){
+    typeValue = 'Отписка';
+  }
+
   formData.append('barcode', barcode.value || '');
   formData.append('shortage', shortage.value || '');
   formData.append('surplus', surplus.value || '');
   formData.append('through', through.value || '');
-  formData.append('depersonalization_barcode', depersonalizationBarcode.value || '');
   formData.append('worker', worker.value || '');
   formData.append('table', table.value || '');
   formData.append('reason', reason.value || '');
   formData.append('count', count.value || '');
-
+  formData.append('type', typeValue);
   // добавляем видеофайлы
   videos.value.forEach(file => {
     formData.append('videos[]', file);
