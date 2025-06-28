@@ -59,7 +59,7 @@ const tryAuth = async () => {
     const formData = new FormData();
     formData.append("password", password.value);
     formData.append("department", import.meta.env.VITE_DIRECTION_CODE)
-    const res = await fetch(import.meta.env.VITE_API_URL + '/api/report/v1.0/try-auth', {
+    const res = await fetch(import.meta.env.VITE_API_URL + '/api/' + import.meta.env.VITE_ENDPOINT_CODE + '/v1.0/try-auth', {
       method: 'POST',
       body: formData
     });
