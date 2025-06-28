@@ -17,21 +17,21 @@
               </div>
             </div>
             <div class="col-md-6">
-              <label for="shortage" class="form-label">Недостача<sup class="text-danger">*</sup></label>
+              <label for="shortage" class="form-label">Недостача</label>
               <div class="d-flex">
                 <input v-model="shortage" type="number" inputmode="numeric" class="form-control" id="shortage" name="shortage" >
                 <span @click.prevent="shortage = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-6">
-              <label for="surplus" class="form-label">Излишек<sup class="text-danger">*</sup></label>
+              <label for="surplus" class="form-label">Излишек</label>
               <div class="d-flex">
                 <input v-model="surplus" type="number" inputmode="numeric" class="form-control" id="surplus" name="surplus" >
                 <span @click.prevent="surplus = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-6">
-              <label for="through" class="form-label">через «Да»<sup class="text-danger">*</sup></label>
+              <label for="through" class="form-label">через «Да»</label>
               <div class="d-flex">
                 <input v-model="through" type="number" inputmode="numeric" class="form-control" id="through" name="through" >
                 <span @click.prevent="through = ''" class="btn btn-warning">x</span>
@@ -39,7 +39,7 @@
             </div>
 
             <div class="col-md-6">
-              <label for="depersonalization-barcode" class="form-label">Обезличка ШК<sup class="text-danger">*</sup></label>
+              <label for="depersonalization-barcode" class="form-label">Обезличка ШК</label>
               <div class="d-flex">
                 <input v-model="depersonalizationBarcode" inputmode="numeric" type="number" class="form-control" id="depersonalization-barcode" name="depersonalization-barcode">
                 <span @click.prevent="depersonalizationBarcode = ''" class="btn btn-warning">x</span>
@@ -60,21 +60,21 @@
               </div>
             </div>
             <div class="col-md-6">
-              <label for="reason" class="form-label">Причина обезлички<sup class="text-danger">*</sup></label>
+              <label for="reason" class="form-label">Причина обезлички</label>
               <div class="d-flex">
                 <input v-model="reason" type="text" class="form-control" id="reason" name="reason">
                 <span @click.prevent="reason = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-6">
-              <label for="count" class="form-label">Количество<sup class="text-danger">*</sup></label>
+              <label for="count" class="form-label">Количество</label>
               <div class="d-flex">
                 <input v-model="count" type="number" inputmode="numeric" class="form-control" id="count" name="count">
                 <span @click.prevent="count = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-12">
-              <label for="depersonalization-video" class="form-label">Обезличка видео<sup class="text-danger">*</sup></label>
+              <label for="depersonalization-video" class="form-label">Обезличка видео</label>
               <div class="d-flex flex-column">
                 <!-- Файл-инпут: сразу открывает камеру на планшете + позволяет выбрать несколько -->
                 <input
@@ -105,7 +105,7 @@
                 <div class="col-12">
                   <button :disabled="!canSubmit" type="button" @click.prevent="trySubmit" class="btn btn-dark w-100 fw-bold" >Отправить</button>
                 </div>
-                <div class="col-12 small text-danger" v-if="!canSubmit">
+                <div class="col-12 small text-danger" v-if="!canSubmit && !isLoading">
                   Заполните все поля!
                 </div>
               </div>
@@ -181,15 +181,15 @@ const isLoading = ref(false);
 
 const canSubmit = computed(() => {
   return barcode.value &&
-      shortage.value &&
-      surplus.value &&
-      through.value &&
-      depersonalizationBarcode.value &&
-      videos.value.length > 0 &&
-      //worker.value &&
+      //shortage.value &&
+      //surplus.value &&
+      //through.value &&
+      //depersonalizationBarcode.value &&
+      //videos.value.length > 0 &&
+      worker.value &&
       table.value &&
-      reason.value &&
-      count.value &&
+      //reason.value &&
+      //count.value &&
       !isLoading.value
 });
 
@@ -261,7 +261,7 @@ const onSubmit = async () => {
     const data = await res.json();
     if(data.success){
       successText.value = 'Успешно отправлено!';
-      clearData();
+      //clearData();
     }
     else{
       errorText.value = 'Не удалось отправить запрос';
