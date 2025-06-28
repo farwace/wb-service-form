@@ -145,9 +145,9 @@ const isLoading = ref(false);
 const canSubmit = computed(() => {
   return reason.value &&
       videos.value.length > 0 &&
-      receiptNumber.value &&
-      vehicleNumber.value &&
-      gateNumbers.value &&
+      // receiptNumber.value &&
+      // vehicleNumber.value &&
+      // gateNumbers.value &&
       !isLoading.value
 });
 
