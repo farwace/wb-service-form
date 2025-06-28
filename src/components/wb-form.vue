@@ -19,21 +19,21 @@
             <div class="col-md-6">
               <label for="shortage" class="form-label">Недостача</label>
               <div class="d-flex">
-                <input v-model="shortage" type="text" inputmode="numeric" class="form-control" id="shortage" name="shortage" >
+                <input v-model="shortage" type="number" inputmode="numeric" class="form-control" id="shortage" name="shortage" >
                 <span @click.prevent="shortage = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-6">
               <label for="surplus" class="form-label">Излишек</label>
               <div class="d-flex">
-                <input v-model="surplus" type="text" inputmode="numeric" class="form-control" id="surplus" name="surplus" >
+                <input v-model="surplus" type="number" inputmode="numeric" class="form-control" id="surplus" name="surplus" >
                 <span @click.prevent="surplus = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-6">
               <label for="through" class="form-label">через «Да»</label>
               <div class="d-flex">
-                <input v-model="through" type="text" inputmode="numeric" class="form-control" id="through" name="through" >
+                <input v-model="through" type="number" inputmode="numeric" class="form-control" id="through" name="through" >
                 <span @click.prevent="through = ''" class="btn btn-warning">x</span>
               </div>
             </div>
@@ -41,42 +41,62 @@
             <div class="col-md-6">
               <label for="depersonalization-barcode" class="form-label">Обезличка ШК</label>
               <div class="d-flex">
-                <input v-model="depersonalizationBarcode" inputmode="numeric" type="text" class="form-control" id="depersonalization-barcode" name="depersonalization-barcode">
+                <input v-model="depersonalizationBarcode" inputmode="numeric" type="number" class="form-control" id="depersonalization-barcode" name="depersonalization-barcode">
                 <span @click.prevent="depersonalizationBarcode = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-6">
-              <label for="worker" inputmode="numeric" class="form-label">ID сотрудника</label>
+              <label for="worker" class="form-label">ID сотрудника</label>
               <div class="d-flex">
-                <input v-model="worker" type="number" class="form-control" id="worker" name="worker">
+                <input v-model="worker" type="number" inputmode="numeric" class="form-control" id="worker" name="worker">
                 <span @click.prevent="worker = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-6">
-              <label for="table" inputmode="numeric" class="form-label">№ Стола Приемки</label>
+              <label for="table" class="form-label">№ Стола Приемки</label>
               <div class="d-flex">
-                <input v-model="table" type="text" class="form-control" id="table" name="table">
+                <input v-model="table" type="number" inputmode="numeric"  class="form-control" id="table" name="table">
                 <span @click.prevent="table = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-6">
               <label for="reason" class="form-label">Причина обезлички</label>
               <div class="d-flex">
-                <input v-model="reason" type="number" class="form-control" id="reason" name="reason">
+                <input v-model="reason" type="text" class="form-control" id="reason" name="reason">
                 <span @click.prevent="reason = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-6">
-              <label for="count" inputmode="numeric" class="form-label">Количество</label>
+              <label for="count" class="form-label">Количество</label>
               <div class="d-flex">
-                <input v-model="count" type="text" class="form-control" id="count" name="count">
+                <input v-model="count" type="number" inputmode="numeric" class="form-control" id="count" name="count">
                 <span @click.prevent="count = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-12">
               <label for="depersonalization-video" class="form-label">Обезличка видео</label>
-              <div class="d-flex">
-                <input v-model="depersonalizationVideo" type="text" class="form-control" id="depersonalization-video" name="depersonalization-video">
+              <div class="d-flex flex-column">
+                <!-- Файл-инпут: сразу открывает камеру на планшете + позволяет выбрать несколько -->
+                <input
+                    ref="videoInput"
+                    type="file"
+                    accept="video/*"
+                    capture="camcorder"
+                    multiple
+                    @change="onVideosSelected"
+                    class="form-control mb-2"
+                />
+
+                <!-- Превью загруженных/записанных видео -->
+                <div v-if="videoPreviews.length" class="d-flex flex-wrap gap-2">
+                  <video
+                      v-for="(src, i) in videoPreviews"
+                      :key="i"
+                      :src="src"
+                      controls
+                      style="max-width: 150px; max-height: 150px;"
+                  ></video>
+                </div>
               </div>
             </div>
 
@@ -118,6 +138,24 @@ const reason = ref<string>();
 const count = ref<string>();
 const confirmSelect = ref<boolean>(false);
 
+const videos = ref<File[]>([]);
+const videoPreviews = ref<string[]>([]);
+const videoInput = ref<HTMLInputElement|null>(null);
+
+function onVideosSelected(e: Event) {
+  const input = e.target as HTMLInputElement;
+  if (!input.files) return;
+
+  // очищаем старые превью
+  videoPreviews.value.forEach(URL.revokeObjectURL);
+  videos.value = Array.from(input.files);
+
+  // создаём новые превью
+  videoPreviews.value = videos.value.map(file =>
+      URL.createObjectURL(file)
+  );
+}
+
 const isLoading = ref(false);
 
 const canSubmit = computed(() => {
@@ -126,7 +164,7 @@ const canSubmit = computed(() => {
       surplus.value &&
       through.value &&
       depersonalizationBarcode.value &&
-      depersonalizationVideo.value &&
+      videos.value.length > 0 &&
       worker.value &&
       table.value &&
       reason.value &&
@@ -147,6 +185,21 @@ const makeSubmit = () => {
 
 const onSubmit = async () => {
   const formData = new FormData();
+
+  formData.append('barcode', barcode.value || '');
+  formData.append('shortage', shortage.value || '');
+  formData.append('surplus', surplus.value || '');
+  formData.append('through', through.value || '');
+  formData.append('depersonalization_barcode', depersonalizationBarcode.value || '');
+  formData.append('worker', worker.value || '');
+  formData.append('table', table.value || '');
+  formData.append('reason', reason.value || '');
+  formData.append('count', count.value || '');
+
+  // добавляем видеофайлы
+  videos.value.forEach(file => {
+    formData.append('videos[]', file);
+  });
 
   isLoading.value = true;
   try{
