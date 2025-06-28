@@ -261,7 +261,7 @@ const onSubmit = async () => {
     const data = await res.json();
     if(data.success){
       successText.value = 'Успешно отправлено!';
-      //clearData();
+      clearData();
     }
     else{
       errorText.value = 'Не удалось отправить запрос';
