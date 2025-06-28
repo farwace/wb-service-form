@@ -31,7 +31,8 @@
       </div>
     </div>
 
-    <wb-form v-if="isSuccess && !isLoading "/>
+    <wb-form v-if="endpointCode === 'report' && isSuccess && !isLoading "/>
+    <reply-form v-if="endpointCode === 'reply' && isSuccess && !isLoading "/>
 
   </div>
 </template>
@@ -39,6 +40,7 @@
 <script setup lang="ts">
 import WbForm from "@/components/wb-form.vue";
 import {onMounted, ref} from "vue";
+import ReplyForm from "@/components/reply-form.vue";
 
 const passwd = localStorage.getItem("passwd");
 const password = ref<string>(passwd || '');
@@ -46,8 +48,12 @@ const isLoading = ref<boolean>(false);
 const isSuccess = ref<boolean>(false);
 const displayPassword = ref<boolean>(false);
 
+const endpointCode = ref<string>();
+
 onMounted(() => {
   tryAuth();
+
+  endpointCode.value = import.meta.env.VITE_ENDPOINT_CODE;
 })
 
 const tryAuth = async () => {
