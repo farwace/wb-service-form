@@ -9,99 +9,91 @@
           'opacity-50':isLoading
         }" @submit.prevent="onSubmit">
           <div class="row g-3">
-            <div class="col-md-12">
-              <button type="button" class="btn" :class="{'btn-success': type === 'ob', 'btn-secondary': type != 'ob'}" @click="() => type = 'ob'">Обезличка</button>
-              &nbsp;
-              <button type="button" class="btn" :class="{'btn-success': type === 'ot', 'btn-secondary': type != 'ot'}" @click="() => type = 'ot'">Отписка</button>
-            </div>
-            <div class="col-md-12">
-              <label for="barcode" class="form-label">ШК<sup class="text-danger">*</sup></label>
-              <div class="d-flex">
-                <input v-model="barcode" type="text" class="form-control" autofocus id="barcode" name="barcode" required>
-                <span @click.prevent="barcode = ''" class="btn btn-warning">x</span>
-              </div>
-            </div>
-            <div class="col-md-6" v-show="type==='ot'">
-              <label for="shortage" class="form-label">Недостача</label>
-              <div class="d-flex">
-                <input v-model="shortage" type="number" inputmode="numeric" class="form-control" id="shortage" name="shortage" >
-                <span @click.prevent="shortage = ''" class="btn btn-warning">x</span>
-              </div>
-            </div>
-            <div class="col-md-6" v-show="type==='ot'">
-              <label for="surplus" class="form-label">Излишек</label>
-              <div class="d-flex">
-                <input v-model="surplus" type="number" inputmode="numeric" class="form-control" id="surplus" name="surplus" >
-                <span @click.prevent="surplus = ''" class="btn btn-warning">x</span>
-              </div>
-            </div>
-            <div class="col-md-6" v-show="type==='ot'">
-              <label for="through" class="form-label">через «Да»</label>
-              <div class="d-flex">
-                <input v-model="through" type="number" inputmode="numeric" class="form-control" id="through" name="through" >
-                <span @click.prevent="through = ''" class="btn btn-warning">x</span>
-              </div>
-            </div>
-
             <div class="col-md-6">
               <label for="worker" class="form-label">ID сотрудника<sup class="text-danger">*</sup></label>
               <div class="d-flex">
-                <input v-model="worker" type="number" inputmode="numeric" class="form-control" id="worker" name="worker">
+                <input v-model="worker" type="number" inputmode="numeric" class="form-control" autofocus id="worker" name="worker" required>
                 <span @click.prevent="worker = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-6">
-              <label for="table" class="form-label">№ Стола Приемки<sup class="text-danger">*</sup></label>
+              <label for="name" class="form-label">Имя<sup class="text-danger">*</sup></label>
               <div class="d-flex">
-                <input v-model="table" type="number" inputmode="numeric"  class="form-control" id="table" name="table">
-                <span @click.prevent="table = ''" class="btn btn-warning">x</span>
+                <input v-model="name" type="text" class="form-control" id="name" name="name" required>
+                <span @click.prevent="name = ''" class="btn btn-warning">x</span>
               </div>
             </div>
-            <div class="col-md-6" v-show="type==='ob'">
-              <label for="reason" class="form-label">Причина обезлички</label>
+            <div class="col-md-12">
+              <label for="square" class="form-label">Квадрат сотрудника<sup class="text-danger">*</sup></label>
               <div class="d-flex">
-                <input v-model="reason" type="text" class="form-control" id="reason" name="reason">
-                <span @click.prevent="reason = ''" class="btn btn-warning">x</span>
+                <input v-model="square" type="text" class="form-control" id="square" name="square" required>
+                <span @click.prevent="square = ''" class="btn btn-warning">x</span>
               </div>
             </div>
-            <div class="col-md-6" v-show="type==='ob'">
-              <label for="count" class="form-label">Количество</label>
-              <div class="d-flex">
-                <input v-model="count" type="number" inputmode="numeric" class="form-control" id="count" name="count">
-                <span @click.prevent="count = ''" class="btn btn-warning">x</span>
-              </div>
-            </div>
-            <div class="col-md-12" v-show="type==='ob'">
-              <label for="depersonalization-video" class="form-label">Обезличка видео</label>
-              <div class="d-flex flex-column">
-                <!-- Файл-инпут: сразу открывает камеру на планшете + позволяет выбрать несколько -->
-                <input
-                    ref="videoInput"
-                    type="file"
-                    accept="video/*"
-                    capture="camcorder"
-                    multiple
-                    @change="onVideosSelected"
-                    class="form-control mb-2"
-                />
 
-                <!-- Превью загруженных/записанных видео -->
-                <div v-if="videoPreviews.length" class="d-flex flex-wrap gap-2">
-                  <video
-                      v-for="(src, i) in videoPreviews"
-                      :key="i"
-                      :src="src"
-                      controls
-                      style="max-width: 150px; max-height: 150px;"
-                  ></video>
+            <!-- Ошибка: радиокнопки -->
+            <div class="col-md-12">
+              <label class="form-label d-block">Ошибка<sup class="text-danger">*</sup></label>
+              <div class="d-flex flex-wrap gap-3">
+                <div class="form-check" v-for="opt in errorOptions" :key="opt.value">
+                  <input class="form-check-input" type="radio" name="error_type" :id="'err-' + opt.value"
+                         :value="opt.value" v-model="errorType" @change="onTypeChange">
+                  <label class="form-check-label" :for="'err-' + opt.value">{{ opt.label }}</label>
                 </div>
               </div>
             </div>
 
+            <!-- Другая причина (текст) — по умолчанию скрыто -->
+            <div class="col-md-12" v-show="errorType === 'other'">
+              <label for="error_note" class="form-label">Другая причина (текст)<sup class="text-danger">*</sup></label>
+              <div class="d-flex">
+                <input v-model="errorNote" type="text" class="form-control" id="error_note" name="error_note">
+                <span @click.prevent="errorNote = ''" class="btn btn-warning">x</span>
+              </div>
+            </div>
+
+            <!-- Блок «Нет ШК»: фото + соседний ШК + БК, по умолчанию скрыто -->
+            <template v-if="errorType === 'no_barcode'">
+              <div class="col-md-12">
+                <label for="no-barcode-photo" class="form-label">Фото (Нет ШК)<sup class="text-danger">*</sup></label>
+                <div class="d-flex flex-column">
+                  <input
+                      ref="photoInput"
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      id="no-barcode-photo"
+                      @change="onPhotoSelected"
+                      class="form-control mb-2"
+                  />
+                  <div v-if="photoPreview" class="d-flex flex-wrap gap-2">
+                    <img :src="photoPreview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="фото">
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-12">
+                <label for="neighbor_barcode" class="form-label">Соседний ШК с этого поступления<sup class="text-danger">*</sup></label>
+                <div class="d-flex">
+                  <input v-model="neighborBarcode" type="text" class="form-control" id="neighbor_barcode" name="neighbor_barcode">
+                  <span @click.prevent="neighborBarcode = ''" class="btn btn-warning">x</span>
+                </div>
+              </div>
+              <div class="col-md-12">
+                <label for="bk" class="form-label">БК<sup class="text-danger">*</sup></label>
+                <div class="d-flex">
+                  <input v-model="bk" type="text" class="form-control" id="bk" name="bk">
+                  <span @click.prevent="bk = ''" class="btn btn-warning">x</span>
+                </div>
+              </div>
+            </template>
+
             <div class="col-12">
               <div class="row">
                 <div class="col-12">
-                  <button :disabled="!canSubmit" type="button" @click.prevent="trySubmit" class="btn btn-dark w-100 fw-bold" >Отправить</button>
+                  <button :disabled="!canSubmit" type="button" @click.prevent="trySubmit" class="btn btn-dark w-100 fw-bold">Отправить</button>
+                </div>
+                <div class="col-12 small text-danger" v-if="!canSubmit && !isLoading && errorType">
+                  Заполните все обязательные поля!
                 </div>
               </div>
             </div>
@@ -116,6 +108,15 @@
         :message="successText"
         @accept="() => successText = undefined"
         @cancel="successText = undefined;"
+    />
+
+    <Confirm
+        v-if="warningText"
+        title="Внимание!"
+        :message="warningText"
+        :show-cancel="false"
+        @accept="() => warningText = undefined"
+        @cancel="warningText = undefined;"
     />
 
     <Confirm
@@ -139,114 +140,120 @@
 import {computed, ref} from "vue";
 import Confirm from "@/components/Confirm.vue";
 
-const type = ref<string>('ob');
-
 const formRef = ref<HTMLFormElement>();
-const barcode = ref<string>();
-const shortage = ref<string>();
-const surplus = ref<string>();
-const through = ref<string>();
-const worker = ref<string>();
-const table = ref<string>();
-const reason = ref<string>();
-const count = ref<string>();
-const confirmSelect = ref<boolean>(false);
 
+const worker = ref<string>();
+const name = ref<string>();
+const square = ref<string>();
+const errorType = ref<string>('');
+const errorNote = ref<string>();
+const neighborBarcode = ref<string>();
+const bk = ref<string>();
+
+const photo = ref<File | null>(null);
+const photoPreview = ref<string>('');
+const photoInput = ref<HTMLInputElement | null>(null);
+
+const confirmSelect = ref<boolean>(false);
 const errorText = ref<string>();
 const successText = ref<string>();
+const warningText = ref<string>();
 
-const videos = ref<File[]>([]);
-const videoPreviews = ref<string[]>([]);
-const videoInput = ref<HTMLInputElement|null>(null);
+const errorOptions = [
+  {value: 'not_in_order', label: 'Товар не в заказе'},
+  {value: 'office_error', label: 'Ошибка офиса'},
+  {value: 'no_barcode', label: 'Нет ШК'},
+  {value: 'other', label: 'Другая причина'},
+];
 
-function onVideosSelected(e: Event) {
+function onPhotoSelected(e: Event) {
   const input = e.target as HTMLInputElement;
-  if (!input.files) return;
-
-  // очищаем старые превью
-  videoPreviews.value.forEach(URL.revokeObjectURL);
-  videos.value = Array.from(input.files);
-
-  // создаём новые превью
-  videoPreviews.value = videos.value.map(file =>
-      URL.createObjectURL(file)
-  );
+  if (!input.files || !input.files.length) return;
+  if (photoPreview.value) URL.revokeObjectURL(photoPreview.value);
+  photo.value = input.files[0];
+  photoPreview.value = URL.createObjectURL(photo.value);
 }
 
 const isLoading = ref(false);
 
 const canSubmit = computed(() => {
-  return barcode.value &&
-      //shortage.value &&
-      //surplus.value &&
-      //through.value &&
-      //depersonalizationBarcode.value &&
-      //videos.value.length > 0 &&
-      worker.value &&
-      table.value &&
-      //reason.value &&
-      //count.value &&
-      !isLoading.value
+  if (!worker.value || !name.value || !square.value || !errorType.value || isLoading.value) {
+    return false;
+  }
+  if (errorType.value === 'other') {
+    return !!errorNote.value;
+  }
+  if (errorType.value === 'no_barcode') {
+    return !!photo.value && !!neighborBarcode.value && !!bk.value;
+  }
+  return true;
 });
+
+// Сброс условных полей при смене типа ошибки
+const onTypeChange = () => {
+  if (errorType.value !== 'no_barcode') {
+    clearPhoto();
+    neighborBarcode.value = undefined;
+    bk.value = undefined;
+  }
+  if (errorType.value !== 'other') {
+    errorNote.value = undefined;
+  }
+};
 
 const trySubmit = () => {
   confirmSelect.value = true;
-}
+};
 
 const makeSubmit = () => {
-  if(formRef.value){
+  if (formRef.value) {
     onSubmit();
   }
   confirmSelect.value = false;
-}
+};
+
+const clearPhoto = () => {
+  if (photoInput.value) photoInput.value.value = '';
+  if (photoPreview.value) URL.revokeObjectURL(photoPreview.value);
+  photoPreview.value = '';
+  photo.value = null;
+};
 
 const clearData = () => {
   let val = undefined;
-  barcode.value = val;
-  shortage.value = val;
-  surplus.value = val;
-  through.value = val;
   worker.value = val;
-  table.value = val;
-  reason.value = val;
-  count.value = val;
-
-  if(videoInput.value){
-    videoInput.value.value = '';
-  }
-  videoPreviews.value = [];
-  videos.value = [];
-}
+  name.value = val;
+  square.value = val;
+  errorNote.value = val;
+  neighborBarcode.value = val;
+  bk.value = val;
+  errorType.value = '';
+  clearPhoto();
+};
 
 clearData();
 
 const onSubmit = async () => {
   const formData = new FormData();
 
-  let typeValue = '';
-  if(type.value === 'ob'){
-    typeValue = 'Обезличка';
-  }
-  if(type.value === 'ot'){
-    typeValue = 'Отписка';
-  }
-
-  formData.append('barcode', barcode.value || '');
-  formData.append('shortage', shortage.value || '');
-  formData.append('surplus', surplus.value || '');
-  formData.append('through', through.value || '');
   formData.append('worker', worker.value || '');
-  formData.append('table', table.value || '');
-  formData.append('reason', reason.value || '');
-  formData.append('count', count.value || '');
-  formData.append('type', typeValue);
-  // добавляем видеофайлы
-  videos.value.forEach(file => {
-    formData.append('videos[]', file);
-  });
+  formData.append('name', name.value || '');
+  formData.append('square', square.value || '');
+  formData.append('error_type', errorType.value || '');
+
+  if (errorType.value === 'other') {
+    formData.append('error_note', errorNote.value || '');
+  }
+  if (errorType.value === 'no_barcode') {
+    formData.append('neighbor_barcode', neighborBarcode.value || '');
+    formData.append('bk', bk.value || '');
+    if (photo.value) {
+      formData.append('error_photo', photo.value);
+    }
+  }
 
   isLoading.value = true;
-  try{
+  try {
     const res = await fetch(import.meta.env.VITE_API_URL + '/api/' + import.meta.env.VITE_ENDPOINT_CODE + '/v1.0/submit/' + import.meta.env.VITE_DIRECTION_CODE, {
       method: 'POST',
       body: formData,
@@ -255,25 +262,26 @@ const onSubmit = async () => {
       }
     });
     isLoading.value = false;
-    if(res.status != 200){
+    if (res.status != 200) {
       const ddd = await res.json();
-      errorText.value = 'Не удалось отправить запрос (' + ddd?.message? ddd.message : res.status + ')';
+      errorText.value = 'Не удалось отправить запрос (' + (ddd?.message ? ddd.message : res.status) + ')';
       return;
     }
     const data = await res.json();
-    if(data.success){
-      successText.value = 'Успешно отправлено!';
+    if (data.success) {
+      // Для «Товар не в заказе» — отдельное предупреждение о старшем смены
+      if (errorType.value === 'not_in_order') {
+        warningText.value = 'Дождитесь старшего смены! Решение по данной ошибке примет он!';
+      } else {
+        successText.value = 'Успешно отправлено!';
+      }
       clearData();
-    }
-    else{
+    } else {
       errorText.value = 'Не удалось отправить запрос';
-
     }
-  }
-  catch (e){
+  } catch (e) {
     isLoading.value = false;
     errorText.value = 'Ошибка при отправке запроса, попробуйте еще раз';
   }
-}
-
+};
 </script>

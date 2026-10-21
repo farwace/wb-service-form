@@ -9,7 +9,7 @@
           {{ message }}
         </div>
         <div class="confirm-modal-buttons d-flex flex-nowrap justify-content-end gap-2">
-          <button type="button" class="btn btn-secondary" @click="emits('cancel')">Отменить</button>
+          <button v-if="showCancel" type="button" class="btn btn-secondary" @click="emits('cancel')">Отменить</button>
           <button type="button" class="btn btn-success" @click="emits('accept')">Принять</button>
         </div>
       </div>
@@ -18,14 +18,19 @@
 </template>
 <script lang="ts" setup>
 
+import {withDefaults} from "vue";
+
 const emits = defineEmits([
     'accept',
     'cancel'
 ]);
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   title?:string,
   message?:string,
-}>();
+  showCancel?:boolean,
+}>(), {
+  showCancel: true,
+});
 
 
 </script>
