@@ -103,12 +103,12 @@
 
             <!-- Фото ID Офиса — «Неверный офис» -->
             <div class="col-md-12" v-if="showOfficeIdPhoto">
-              <label for="office-id-photo" class="form-label">ID Офиса<sup class="text-danger">*</sup></label>
+              <label for="office-id-photo" class="form-label">Фото ошибки с ТСД<sup class="text-danger">*</sup></label>
               <div class="d-flex flex-column">
                 <input ref="officeIdPhotoInput" type="file" accept="image/*" capture="environment"
                        id="office-id-photo" @change="onOfficeIdPhotoSelected" class="form-control mb-2"/>
                 <div v-if="officeIdPhotoPreview" class="d-flex flex-wrap gap-2">
-                  <img :src="officeIdPhotoPreview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="ID офиса">
+                  <img :src="officeIdPhotoPreview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="фото ошибки с ТСД">
                 </div>
               </div>
             </div>
