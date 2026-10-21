@@ -5,9 +5,7 @@
         <h1 class="mb-3">Отписки сотрудников</h1>
         <form
             ref="formRef"
-            :class="{
-          'opacity-50':isLoading
-        }" @submit.prevent="onSubmit">
+            :class="{'opacity-50':isLoading}" @submit.prevent="onSubmit">
           <div class="row g-3">
             <div class="col-md-6">
               <label for="worker" class="form-label">ID сотрудника<sup class="text-danger">*</sup></label>
@@ -43,8 +41,8 @@
               </div>
             </div>
 
-            <!-- Другая причина (текст) — по умолчанию скрыто -->
-            <div class="col-md-12" v-show="errorType === 'other'">
+            <!-- Другая причина (текст) -->
+            <div class="col-md-12" v-if="showErrorNote">
               <label for="error_note" class="form-label">Другая причина (текст)<sup class="text-danger">*</sup></label>
               <div class="d-flex">
                 <input v-model="errorNote" type="text" class="form-control" id="error_note" name="error_note">
@@ -52,40 +50,68 @@
               </div>
             </div>
 
-            <!-- Блок «Нет ШК»: фото + соседний ШК + БК, по умолчанию скрыто -->
-            <template v-if="errorType === 'no_barcode'">
+            <!-- ID (ШК) товара — «Товар не в заказе» / «Неверный офис» -->
+            <div class="col-md-12" v-if="showProductBarcode">
+              <label for="product_barcode" class="form-label">ID (ШК) товара<sup class="text-danger">*</sup></label>
+              <div class="d-flex">
+                <input v-model="productBarcode" type="text" class="form-control" id="product_barcode" name="product_barcode">
+                <span @click.prevent="productBarcode = ''" class="btn btn-warning">x</span>
+              </div>
+            </div>
+
+            <!-- Соседний ID (ШК) с поступления — «Без ID (ШК)» -->
+            <div class="col-md-12" v-if="showNeighbor">
+              <label for="neighbor_barcode" class="form-label">Соседний ID (ШК) с поступления<sup class="text-danger">*</sup></label>
+              <div class="d-flex">
+                <input v-model="neighborBarcode" type="text" class="form-control" id="neighbor_barcode" name="neighbor_barcode">
+                <span @click.prevent="neighborBarcode = ''" class="btn btn-warning">x</span>
+              </div>
+            </div>
+
+            <!-- ТТН + номер — «Товар не в заказе» / «Без ID (ШК)» -->
+            <template v-if="showTtn">
               <div class="col-md-12">
-                <label for="no-barcode-photo" class="form-label">Фото (Нет ШК)<sup class="text-danger">*</sup></label>
-                <div class="d-flex flex-column">
-                  <input
-                      ref="photoInput"
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      id="no-barcode-photo"
-                      @change="onPhotoSelected"
-                      class="form-control mb-2"
-                  />
-                  <div v-if="photoPreview" class="d-flex flex-wrap gap-2">
-                    <img :src="photoPreview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="фото">
+                <label class="form-label d-block">ТТН<sup class="text-danger">*</sup></label>
+                <div class="d-flex flex-wrap gap-3">
+                  <div class="form-check" v-for="opt in ttnOptions" :key="opt.value">
+                    <input class="form-check-input" type="radio" name="ttn_type" :id="'ttn-' + opt.value"
+                           :value="opt.value" v-model="ttnType">
+                    <label class="form-check-label" :for="'ttn-' + opt.value">{{ opt.label }}</label>
                   </div>
                 </div>
               </div>
               <div class="col-md-12">
-                <label for="neighbor_barcode" class="form-label">Соседний ШК с этого поступления<sup class="text-danger">*</sup></label>
+                <label for="ttn_number" class="form-label">Номер ТТН<sup class="text-danger">*</sup></label>
                 <div class="d-flex">
-                  <input v-model="neighborBarcode" type="text" class="form-control" id="neighbor_barcode" name="neighbor_barcode">
-                  <span @click.prevent="neighborBarcode = ''" class="btn btn-warning">x</span>
-                </div>
-              </div>
-              <div class="col-md-12">
-                <label for="bk" class="form-label">БК<sup class="text-danger">*</sup></label>
-                <div class="d-flex">
-                  <input v-model="bk" type="text" class="form-control" id="bk" name="bk">
-                  <span @click.prevent="bk = ''" class="btn btn-warning">x</span>
+                  <input :value="ttnNumber" @input="onTtnInput" type="text" inputmode="numeric" class="form-control" id="ttn_number" name="ttn_number">
+                  <span @click.prevent="ttnNumber = ''" class="btn btn-warning">x</span>
                 </div>
               </div>
             </template>
+
+            <!-- Фото товара — «Товар не в заказе» / «Неверный офис» / «Без ID (ШК)» -->
+            <div class="col-md-12" v-if="showProductPhoto">
+              <label for="product-photo" class="form-label">Фото товара<sup class="text-danger">*</sup></label>
+              <div class="d-flex flex-column">
+                <input ref="productPhotoInput" type="file" accept="image/*" capture="environment"
+                       id="product-photo" @change="onProductPhotoSelected" class="form-control mb-2"/>
+                <div v-if="productPhotoPreview" class="d-flex flex-wrap gap-2">
+                  <img :src="productPhotoPreview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="фото товара">
+                </div>
+              </div>
+            </div>
+
+            <!-- Фото ID Офиса — «Неверный офис» -->
+            <div class="col-md-12" v-if="showOfficeIdPhoto">
+              <label for="office-id-photo" class="form-label">ID Офиса<sup class="text-danger">*</sup></label>
+              <div class="d-flex flex-column">
+                <input ref="officeIdPhotoInput" type="file" accept="image/*" capture="environment"
+                       id="office-id-photo" @change="onOfficeIdPhotoSelected" class="form-control mb-2"/>
+                <div v-if="officeIdPhotoPreview" class="d-flex flex-wrap gap-2">
+                  <img :src="officeIdPhotoPreview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="ID офиса">
+                </div>
+              </div>
+            </div>
 
             <div class="col-12">
               <div class="row">
@@ -142,63 +168,139 @@ import Confirm from "@/components/Confirm.vue";
 
 const formRef = ref<HTMLFormElement>();
 
+// Базовые поля
 const worker = ref<string>();
 const name = ref<string>();
 const square = ref<string>();
 const errorType = ref<string>('');
-const errorNote = ref<string>();
-const neighborBarcode = ref<string>();
-const bk = ref<string>();
 
-const photo = ref<File | null>(null);
-const photoPreview = ref<string>('');
-const photoInput = ref<HTMLInputElement | null>(null);
+// Условные поля
+const errorNote = ref<string>();
+const productBarcode = ref<string>();
+const neighborBarcode = ref<string>();
+const ttnType = ref<string>('');
+const ttnNumber = ref<string>('');
+
+// Фото
+const productPhoto = ref<File | null>(null);
+const productPhotoPreview = ref<string>('');
+const productPhotoInput = ref<HTMLInputElement | null>(null);
+const officeIdPhoto = ref<File | null>(null);
+const officeIdPhotoPreview = ref<string>('');
+const officeIdPhotoInput = ref<HTMLInputElement | null>(null);
 
 const confirmSelect = ref<boolean>(false);
 const errorText = ref<string>();
 const successText = ref<string>();
 const warningText = ref<string>();
+const isLoading = ref(false);
 
 const errorOptions = [
   {value: 'not_in_order', label: 'Товар не в заказе'},
-  {value: 'office_error', label: 'Ошибка офиса'},
-  {value: 'no_barcode', label: 'Нет ШК'},
+  {value: 'office_error', label: 'Неверный офис'},
+  {value: 'no_barcode', label: 'Без ID (ШК)'},
   {value: 'other', label: 'Другая причина'},
 ];
 
-function onPhotoSelected(e: Event) {
+const ttnOptions = [
+  {value: 'wb_gi', label: 'WB-GI'},
+  {value: 'wb_mp', label: 'WB-MP'},
+  {value: 'grid_number', label: 'Номер сетки'},
+];
+
+// Попапы-инструкции по типу ошибки (после успешной отправки)
+const ALERTS: Record<string, string> = {
+  not_in_order: 'Положите в подписанную тару “Не в заказе”',
+  office_error: 'Положите в подписанную тару “Неверный офис”',
+  no_barcode: 'Положите в подписанную тару “Без ШК”',
+};
+
+// Условная видимость
+const showErrorNote = computed(() => errorType.value === 'other');
+const showProductBarcode = computed(() => ['not_in_order', 'office_error'].includes(errorType.value));
+const showNeighbor = computed(() => errorType.value === 'no_barcode');
+const showTtn = computed(() => ['not_in_order', 'no_barcode'].includes(errorType.value));
+const showProductPhoto = computed(() => ['not_in_order', 'office_error', 'no_barcode'].includes(errorType.value));
+const showOfficeIdPhoto = computed(() => errorType.value === 'office_error');
+
+function onProductPhotoSelected(e: Event) {
   const input = e.target as HTMLInputElement;
   if (!input.files || !input.files.length) return;
-  if (photoPreview.value) URL.revokeObjectURL(photoPreview.value);
-  photo.value = input.files[0];
-  photoPreview.value = URL.createObjectURL(photo.value);
+  if (productPhotoPreview.value) URL.revokeObjectURL(productPhotoPreview.value);
+  productPhoto.value = input.files[0];
+  productPhotoPreview.value = URL.createObjectURL(productPhoto.value);
 }
 
-const isLoading = ref(false);
+function onOfficeIdPhotoSelected(e: Event) {
+  const input = e.target as HTMLInputElement;
+  if (!input.files || !input.files.length) return;
+  if (officeIdPhotoPreview.value) URL.revokeObjectURL(officeIdPhotoPreview.value);
+  officeIdPhoto.value = input.files[0];
+  officeIdPhotoPreview.value = URL.createObjectURL(officeIdPhoto.value);
+}
+
+// Разрешаем ввод только цифр
+function onTtnInput(e: Event) {
+  const input = e.target as HTMLInputElement;
+  ttnNumber.value = input.value.replace(/\D/g, '');
+  input.value = ttnNumber.value;
+}
 
 const canSubmit = computed(() => {
   if (!worker.value || !name.value || !square.value || !errorType.value || isLoading.value) {
     return false;
   }
-  if (errorType.value === 'other') {
-    return !!errorNote.value;
+  switch (errorType.value) {
+    case 'other':
+      return !!errorNote.value;
+    case 'not_in_order':
+      return !!(productBarcode.value && ttnType.value && ttnNumber.value && productPhoto.value);
+    case 'office_error':
+      return !!(productBarcode.value && officeIdPhoto.value && productPhoto.value);
+    case 'no_barcode':
+      return !!(neighborBarcode.value && ttnType.value && ttnNumber.value && productPhoto.value);
+    default:
+      return false;
   }
-  if (errorType.value === 'no_barcode') {
-    return !!photo.value && !!neighborBarcode.value && !!bk.value;
-  }
-  return true;
 });
 
-// Сброс условных полей при смене типа ошибки
+const clearProductPhoto = () => {
+  if (productPhotoInput.value) productPhotoInput.value.value = '';
+  if (productPhotoPreview.value) URL.revokeObjectURL(productPhotoPreview.value);
+  productPhotoPreview.value = '';
+  productPhoto.value = null;
+};
+
+const clearOfficeIdPhoto = () => {
+  if (officeIdPhotoInput.value) officeIdPhotoInput.value.value = '';
+  if (officeIdPhotoPreview.value) URL.revokeObjectURL(officeIdPhotoPreview.value);
+  officeIdPhotoPreview.value = '';
+  officeIdPhoto.value = null;
+};
+
+// Сброс полей, не относящихся к выбранному типу ошибки
 const onTypeChange = () => {
-  if (errorType.value !== 'no_barcode') {
-    clearPhoto();
-    neighborBarcode.value = undefined;
-    bk.value = undefined;
-  }
-  if (errorType.value !== 'other') {
-    errorNote.value = undefined;
-  }
+  errorNote.value = undefined;
+  productBarcode.value = undefined;
+  neighborBarcode.value = undefined;
+  ttnType.value = '';
+  ttnNumber.value = '';
+  clearProductPhoto();
+  clearOfficeIdPhoto();
+};
+
+const clearData = () => {
+  worker.value = undefined;
+  name.value = undefined;
+  square.value = undefined;
+  errorType.value = '';
+  errorNote.value = undefined;
+  productBarcode.value = undefined;
+  neighborBarcode.value = undefined;
+  ttnType.value = '';
+  ttnNumber.value = '';
+  clearProductPhoto();
+  clearOfficeIdPhoto();
 };
 
 const trySubmit = () => {
@@ -212,27 +314,6 @@ const makeSubmit = () => {
   confirmSelect.value = false;
 };
 
-const clearPhoto = () => {
-  if (photoInput.value) photoInput.value.value = '';
-  if (photoPreview.value) URL.revokeObjectURL(photoPreview.value);
-  photoPreview.value = '';
-  photo.value = null;
-};
-
-const clearData = () => {
-  let val = undefined;
-  worker.value = val;
-  name.value = val;
-  square.value = val;
-  errorNote.value = val;
-  neighborBarcode.value = val;
-  bk.value = val;
-  errorType.value = '';
-  clearPhoto();
-};
-
-clearData();
-
 const onSubmit = async () => {
   const formData = new FormData();
 
@@ -244,13 +325,24 @@ const onSubmit = async () => {
   if (errorType.value === 'other') {
     formData.append('error_note', errorNote.value || '');
   }
-  if (errorType.value === 'no_barcode') {
-    formData.append('neighbor_barcode', neighborBarcode.value || '');
-    formData.append('bk', bk.value || '');
-    if (photo.value) {
-      formData.append('error_photo', photo.value);
-    }
+  if (showProductBarcode.value) {
+    formData.append('product_barcode', productBarcode.value || '');
   }
+  if (showNeighbor.value) {
+    formData.append('neighbor_barcode', neighborBarcode.value || '');
+  }
+  if (showTtn.value) {
+    formData.append('ttn_type', ttnType.value || '');
+    formData.append('ttn_number', ttnNumber.value || '');
+  }
+  if (showProductPhoto.value && productPhoto.value) {
+    formData.append('product_photo', productPhoto.value);
+  }
+  if (showOfficeIdPhoto.value && officeIdPhoto.value) {
+    formData.append('office_id_photo', officeIdPhoto.value);
+  }
+
+  const submittedType = errorType.value;
 
   isLoading.value = true;
   try {
@@ -269,9 +361,8 @@ const onSubmit = async () => {
     }
     const data = await res.json();
     if (data.success) {
-      // Для «Товар не в заказе» — отдельное предупреждение о старшем смены
-      if (errorType.value === 'not_in_order') {
-        warningText.value = 'Дождитесь старшего смены! Решение по данной ошибке примет он!';
+      if (ALERTS[submittedType]) {
+        warningText.value = ALERTS[submittedType];
       } else {
         successText.value = 'Успешно отправлено!';
       }
