@@ -38,17 +38,17 @@
               </div>
             </div>
             <div class="col-md-12">
-              <label for="depersonalization-video" class="form-label">{{ t('reply.video') }}</label>
+              <label class="form-label d-block">{{ t('reply.video') }}</label>
               <div class="d-flex flex-column">
-                <!-- Файл-инпут: сразу открывает камеру на планшете + позволяет выбрать несколько -->
-                <input
-                    ref="videoInput"
-                    type="file"
+                <!-- Кастомное поле: открывает камеру на планшете + позволяет выбрать несколько -->
+                <FileField
+                    class="mb-2"
                     accept="video/*"
                     capture="camcorder"
                     multiple
+                    icon="video"
+                    attach-key="common.attachVideo"
                     @change="onVideosSelected"
-                    class="form-control mb-2"
                 />
 
                 <!-- Превью загруженных/записанных видео -->
@@ -108,6 +108,7 @@
 import {computed, ref} from "vue";
 import {useI18n} from "vue-i18n";
 import Confirm from "@/components/Confirm.vue";
+import FileField from "@/components/file-field.vue";
 
 const {t} = useI18n();
 
@@ -127,15 +128,11 @@ const successText = ref<string>();
 
 const videos = ref<File[]>([]);
 const videoPreviews = ref<string[]>([]);
-const videoInput = ref<HTMLInputElement|null>(null);
 
-function onVideosSelected(e: Event) {
-  const input = e.target as HTMLInputElement;
-  if (!input.files) return;
-
+function onVideosSelected(files: File[]) {
   // очищаем старые превью
   videoPreviews.value.forEach(URL.revokeObjectURL);
-  videos.value = Array.from(input.files);
+  videos.value = files;
 
   // создаём новые превью
   videoPreviews.value = videos.value.map(file =>
@@ -172,9 +169,6 @@ const clearData = () => {
   gateNumbers.value = val;
   reason.value = val;
 
-  if(videoInput.value){
-    videoInput.value.value = '';
-  }
   videoPreviews.value = [];
   videos.value = [];
 }

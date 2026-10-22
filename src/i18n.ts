@@ -19,6 +19,8 @@ const messages: Record<AppLocale, Record<string, any>> = {
             submitError: 'Не удалось отправить запрос',
             submitErrorStatus: 'Не удалось отправить запрос ({n})',
             networkError: 'Ошибка при отправке запроса, попробуйте еще раз',
+            attachPhoto: 'Прикрепите фото',
+            attachVideo: 'Прикрепите видео',
         },
         auth: {
             accessRestricted: 'Доступ ограничен паролем',
@@ -73,6 +75,8 @@ const messages: Record<AppLocale, Record<string, any>> = {
             submitError: 'Failed to send the request',
             submitErrorStatus: 'Failed to send the request ({n})',
             networkError: 'Error sending the request, please try again',
+            attachPhoto: 'Attach photo',
+            attachVideo: 'Attach video',
         },
         auth: {
             accessRestricted: 'Access is password-protected',
@@ -127,6 +131,8 @@ const messages: Record<AppLocale, Record<string, any>> = {
             submitError: '요청을 보내지 못했습니다',
             submitErrorStatus: '요청을 보내지 못했습니다 ({n})',
             networkError: '요청 전송 중 오류가 발생했습니다. 다시 시도해 주세요.',
+            attachPhoto: '사진을 첨부하세요',
+            attachVideo: '동영상을 첨부하세요',
         },
         auth: {
             accessRestricted: '비밀번호로 보호된 접근입니다',

@@ -38,10 +38,9 @@
 
             <!-- ID (ШК) товара — фото — «Товар не в заказе» / «Неверный офис» -->
             <div class="col-md-12" v-if="showProductBarcode">
-              <label for="product-barcode-photo" class="form-label">{{ t('report.productBarcode') }}<sup class="text-danger">*</sup></label>
+              <label class="form-label d-block">{{ t('report.productBarcode') }}<sup class="text-danger">*</sup></label>
               <div class="d-flex flex-column">
-                <input ref="productBarcodeInput" type="file" accept="image/*" capture="environment"
-                       id="product-barcode-photo" @change="onProductBarcodeSelected" class="form-control mb-2"/>
+                <FileField class="mb-2" @change="onProductBarcodeSelected"/>
                 <div v-if="productBarcodePreview" class="d-flex flex-wrap gap-2">
                   <img :src="productBarcodePreview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="">
                 </div>
@@ -80,10 +79,9 @@
 
             <!-- Фото товара — «Товар не в заказе» / «Неверный офис» / «Без ID (ШК)» -->
             <div class="col-md-12" v-if="showProductPhoto">
-              <label for="product-photo" class="form-label">{{ t('report.productPhoto') }}<sup class="text-danger">*</sup></label>
+              <label class="form-label d-block">{{ t('report.productPhoto') }}<sup class="text-danger">*</sup></label>
               <div class="d-flex flex-column">
-                <input ref="productPhotoInput" type="file" accept="image/*" capture="environment"
-                       id="product-photo" @change="onProductPhotoSelected" class="form-control mb-2"/>
+                <FileField class="mb-2" @change="onProductPhotoSelected"/>
                 <div v-if="productPhotoPreview" class="d-flex flex-wrap gap-2">
                   <img :src="productPhotoPreview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="">
                 </div>
@@ -92,10 +90,9 @@
 
             <!-- Фото ошибки с ТСД — «Неверный офис» -->
             <div class="col-md-12" v-if="showOfficeIdPhoto">
-              <label for="office-id-photo" class="form-label">{{ t('report.officeIdPhoto') }}<sup class="text-danger">*</sup></label>
+              <label class="form-label d-block">{{ t('report.officeIdPhoto') }}<sup class="text-danger">*</sup></label>
               <div class="d-flex flex-column">
-                <input ref="officeIdPhotoInput" type="file" accept="image/*" capture="environment"
-                       id="office-id-photo" @change="onOfficeIdPhotoSelected" class="form-control mb-2"/>
+                <FileField class="mb-2" @change="onOfficeIdPhotoSelected"/>
                 <div v-if="officeIdPhotoPreview" class="d-flex flex-wrap gap-2">
                   <img :src="officeIdPhotoPreview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="">
                 </div>
@@ -155,6 +152,7 @@
 import {computed, ref} from "vue";
 import {useI18n} from "vue-i18n";
 import Confirm from "@/components/Confirm.vue";
+import FileField from "@/components/file-field.vue";
 
 const {t} = useI18n();
 
@@ -173,13 +171,10 @@ const ttnNumber = ref<string>('');
 // Фото
 const productBarcode = ref<File | null>(null);
 const productBarcodePreview = ref<string>('');
-const productBarcodeInput = ref<HTMLInputElement | null>(null);
 const productPhoto = ref<File | null>(null);
 const productPhotoPreview = ref<string>('');
-const productPhotoInput = ref<HTMLInputElement | null>(null);
 const officeIdPhoto = ref<File | null>(null);
 const officeIdPhotoPreview = ref<string>('');
-const officeIdPhotoInput = ref<HTMLInputElement | null>(null);
 
 const confirmSelect = ref<boolean>(false);
 const errorText = ref<string>();
@@ -215,27 +210,24 @@ const showTtn = computed(() => errorType.value === 'no_barcode');
 const showProductPhoto = computed(() => ['not_in_order', 'office_error', 'no_barcode'].includes(errorType.value));
 const showOfficeIdPhoto = computed(() => errorType.value === 'office_error');
 
-function onProductBarcodeSelected(e: Event) {
-  const input = e.target as HTMLInputElement;
-  if (!input.files || !input.files.length) return;
+function onProductBarcodeSelected(files: File[]) {
+  if (!files.length) return;
   if (productBarcodePreview.value) URL.revokeObjectURL(productBarcodePreview.value);
-  productBarcode.value = input.files[0];
+  productBarcode.value = files[0];
   productBarcodePreview.value = URL.createObjectURL(productBarcode.value);
 }
 
-function onProductPhotoSelected(e: Event) {
-  const input = e.target as HTMLInputElement;
-  if (!input.files || !input.files.length) return;
+function onProductPhotoSelected(files: File[]) {
+  if (!files.length) return;
   if (productPhotoPreview.value) URL.revokeObjectURL(productPhotoPreview.value);
-  productPhoto.value = input.files[0];
+  productPhoto.value = files[0];
   productPhotoPreview.value = URL.createObjectURL(productPhoto.value);
 }
 
-function onOfficeIdPhotoSelected(e: Event) {
-  const input = e.target as HTMLInputElement;
-  if (!input.files || !input.files.length) return;
+function onOfficeIdPhotoSelected(files: File[]) {
+  if (!files.length) return;
   if (officeIdPhotoPreview.value) URL.revokeObjectURL(officeIdPhotoPreview.value);
-  officeIdPhoto.value = input.files[0];
+  officeIdPhoto.value = files[0];
   officeIdPhotoPreview.value = URL.createObjectURL(officeIdPhoto.value);
 }
 
@@ -265,21 +257,18 @@ const canSubmit = computed(() => {
 });
 
 const clearProductBarcode = () => {
-  if (productBarcodeInput.value) productBarcodeInput.value.value = '';
   if (productBarcodePreview.value) URL.revokeObjectURL(productBarcodePreview.value);
   productBarcodePreview.value = '';
   productBarcode.value = null;
 };
 
 const clearProductPhoto = () => {
-  if (productPhotoInput.value) productPhotoInput.value.value = '';
   if (productPhotoPreview.value) URL.revokeObjectURL(productPhotoPreview.value);
   productPhotoPreview.value = '';
   productPhoto.value = null;
 };
 
 const clearOfficeIdPhoto = () => {
-  if (officeIdPhotoInput.value) officeIdPhotoInput.value.value = '';
   if (officeIdPhotoPreview.value) URL.revokeObjectURL(officeIdPhotoPreview.value);
   officeIdPhotoPreview.value = '';
   officeIdPhoto.value = null;
