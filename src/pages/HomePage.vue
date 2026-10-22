@@ -1,5 +1,11 @@
 <template>
   <div class="home-page">
+    <div class="lang-switch">
+      <select :value="locale" @change="changeLang(($event?.target as any)?.value)">
+        <option v-for="loc in AVAILABLE_LOCALES" :key="'loc-' + loc" :value="loc">{{ localeLabels[loc] }}</option>
+      </select>
+    </div>
+
     <div v-if="isLoading" class="loading-outer">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" width="200" height="200" style="shape-rendering: auto; display: block; background: rgb(255, 255, 255);" xmlns:xlink="http://www.w3.org/1999/xlink"><g><circle stroke-linecap="round" fill="none" stroke-dasharray="50.26548245743669 50.26548245743669" stroke="#e15b64" stroke-width="8" r="32" cy="50" cx="50">
         <animateTransform values="0 50 50;360 50 50" keyTimes="0;1" repeatCount="indefinite" dur="1.6666666666666667s" type="rotate" attributeName="transform"></animateTransform>
@@ -12,9 +18,9 @@
     <div class="passwd" v-if="!isSuccess">
       <div class="container my-5" :class="{'op-60': isLoading}">
         <div class="row justify-content-center">
-          <h1 class="mb-3">Доступ ограничен паролем</h1>
+          <h1 class="mb-3">{{ t('auth.accessRestricted') }}</h1>
           <div>
-            <label for="password" class="form-label">Пароль:</label>
+            <label for="password" class="form-label">{{ t('auth.passwordLabel') }}</label>
             <div class="d-flex">
               <input v-model="password" :type="displayPassword ? 'text' : 'password'" class="form-control" autofocus id="password" name="password" required>
               <span @click.prevent="displayPassword = !displayPassword" class="btn btn-warning">
@@ -24,7 +30,7 @@
           </div>
           <div class="mt-4">
             <button class="btn btn-secondary" :disabled="!password" @click="tryAuth">
-              Авторизация
+              {{ t('auth.authorize') }}
             </button>
           </div>
         </div>
@@ -41,6 +47,16 @@
 import WbForm from "@/components/wb-form.vue";
 import {onMounted, ref} from "vue";
 import ReplyForm from "@/components/reply-form.vue";
+import {useI18n} from "vue-i18n";
+import {AVAILABLE_LOCALES} from "@/i18n";
+
+const {t, locale} = useI18n();
+const localeLabels: Record<string, string> = {ru: 'Русский', en: 'English', ko: '한국어'};
+
+function changeLang(lang: string) {
+  locale.value = lang as any;
+  localStorage.setItem('lang', lang);
+}
 
 const passwd = localStorage.getItem("passwd");
 const password = ref<string>(passwd || '');
@@ -76,7 +92,7 @@ const tryAuth = async () => {
         alert(data.message);
       }
       else{
-        alert('Не удалось отправить запрос (' + res.status + ')');
+        alert(t('common.submitErrorStatus', { n: res.status }));
       }
       return;
     }
@@ -87,7 +103,7 @@ const tryAuth = async () => {
     }
   }
   catch (e){
-    alert('Неверный пароль');
+    alert(t('auth.badPassword'));
   }
   finally {
     isLoading.value = false;
@@ -97,6 +113,20 @@ const tryAuth = async () => {
 </script>
 
 <style lang="scss" scoped>
+.lang-switch{
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.75rem 1rem 0;
+  select{
+    font-size: 1rem;
+    text-transform: uppercase;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid #ced4da;
+    background: #fff;
+    cursor: pointer;
+  }
+}
 .loading-outer{
   position: absolute;
   width: 100%;

@@ -9,8 +9,8 @@
           {{ message }}
         </div>
         <div class="confirm-modal-buttons d-flex flex-nowrap justify-content-end gap-2">
-          <button v-if="showCancel" type="button" class="btn btn-secondary" @click="emits('cancel')">Отменить</button>
-          <button type="button" class="btn btn-success" @click="emits('accept')">Принять</button>
+          <button v-if="showCancel" type="button" class="btn btn-secondary" @click="emits('cancel')">{{ t('common.cancel') }}</button>
+          <button type="button" class="btn btn-success" @click="emits('accept')">{{ t('common.apply') }}</button>
         </div>
       </div>
     </div>
@@ -19,6 +19,9 @@
 <script lang="ts" setup>
 
 import {withDefaults} from "vue";
+import {useI18n} from "vue-i18n";
+
+const {t} = useI18n();
 
 const emits = defineEmits([
     'accept',

@@ -2,13 +2,13 @@
   <div class="container my-5">
     <div class="row justify-content-center">
       <div class="col-lg-9">
-        <h1 class="mb-3">Отписки сотрудников</h1>
+        <h1 class="mb-3">{{ t('report.title') }}</h1>
         <form
             ref="formRef"
             :class="{'opacity-50':isLoading}" @submit.prevent="onSubmit">
           <div class="row g-3">
             <div class="col-md-6">
-              <label for="worker" class="form-label">ID сотрудника<sup class="text-danger">*</sup></label>
+              <label for="worker" class="form-label">{{ t('report.workerId') }}<sup class="text-danger">*</sup></label>
               <div class="d-flex">
                 <input v-model="worker" type="number" inputmode="numeric" class="form-control" autofocus id="worker" name="worker" required>
                 <span @click.prevent="worker = ''" class="btn btn-warning">x</span>
@@ -17,7 +17,7 @@
 
             <!-- Ошибка: радиокнопки -->
             <div class="col-md-12">
-              <label class="form-label d-block">Ошибка<sup class="text-danger">*</sup></label>
+              <label class="form-label d-block">{{ t('report.errorLabel') }}<sup class="text-danger">*</sup></label>
               <div class="d-flex flex-wrap gap-3">
                 <div class="form-check" v-for="opt in errorOptions" :key="opt.value">
                   <input class="form-check-input" type="radio" name="error_type" :id="'err-' + opt.value"
@@ -29,7 +29,7 @@
 
             <!-- Другая причина (текст) -->
             <div class="col-md-12" v-if="showErrorNote">
-              <label for="error_note" class="form-label">Другая причина (текст)<sup class="text-danger">*</sup></label>
+              <label for="error_note" class="form-label">{{ t('report.otherReason') }}<sup class="text-danger">*</sup></label>
               <div class="d-flex">
                 <input v-model="errorNote" type="text" class="form-control" id="error_note" name="error_note">
                 <span @click.prevent="errorNote = ''" class="btn btn-warning">x</span>
@@ -38,19 +38,19 @@
 
             <!-- ID (ШК) товара — фото — «Товар не в заказе» / «Неверный офис» -->
             <div class="col-md-12" v-if="showProductBarcode">
-              <label for="product-barcode-photo" class="form-label">ID (ШК) товара<sup class="text-danger">*</sup></label>
+              <label for="product-barcode-photo" class="form-label">{{ t('report.productBarcode') }}<sup class="text-danger">*</sup></label>
               <div class="d-flex flex-column">
                 <input ref="productBarcodeInput" type="file" accept="image/*" capture="environment"
                        id="product-barcode-photo" @change="onProductBarcodeSelected" class="form-control mb-2"/>
                 <div v-if="productBarcodePreview" class="d-flex flex-wrap gap-2">
-                  <img :src="productBarcodePreview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="ID (ШК) товара">
+                  <img :src="productBarcodePreview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="">
                 </div>
               </div>
             </div>
 
             <!-- Соседний ID (ШК) с поступления — «Без ID (ШК)» -->
             <div class="col-md-12" v-if="showNeighbor">
-              <label for="neighbor_barcode" class="form-label">Соседний ID (ШК) с поступления<sup class="text-danger">*</sup></label>
+              <label for="neighbor_barcode" class="form-label">{{ t('report.neighborBarcode') }}<sup class="text-danger">*</sup></label>
               <div class="d-flex">
                 <input v-model="neighborBarcode" type="text" class="form-control" id="neighbor_barcode" name="neighbor_barcode">
                 <span @click.prevent="neighborBarcode = ''" class="btn btn-warning">x</span>
@@ -60,7 +60,7 @@
             <!-- ТТН + номер — «Без ID (ШК)» -->
             <template v-if="showTtn">
               <div class="col-md-12">
-                <label class="form-label d-block">ТТН<sup class="text-danger">*</sup></label>
+                <label class="form-label d-block">{{ t('report.ttn') }}<sup class="text-danger">*</sup></label>
                 <div class="d-flex flex-wrap gap-3">
                   <div class="form-check" v-for="opt in ttnOptions" :key="opt.value">
                     <input class="form-check-input" type="radio" name="ttn_type" :id="'ttn-' + opt.value"
@@ -70,7 +70,7 @@
                 </div>
               </div>
               <div class="col-md-12">
-                <label for="ttn_number" class="form-label">Номер ТТН<sup class="text-danger">*</sup></label>
+                <label for="ttn_number" class="form-label">{{ t('report.ttnNumber') }}<sup class="text-danger">*</sup></label>
                 <div class="d-flex">
                   <input :value="ttnNumber" @input="onTtnInput" type="text" inputmode="numeric" class="form-control" id="ttn_number" name="ttn_number">
                   <span @click.prevent="ttnNumber = ''" class="btn btn-warning">x</span>
@@ -80,24 +80,24 @@
 
             <!-- Фото товара — «Товар не в заказе» / «Неверный офис» / «Без ID (ШК)» -->
             <div class="col-md-12" v-if="showProductPhoto">
-              <label for="product-photo" class="form-label">Фото товара<sup class="text-danger">*</sup></label>
+              <label for="product-photo" class="form-label">{{ t('report.productPhoto') }}<sup class="text-danger">*</sup></label>
               <div class="d-flex flex-column">
                 <input ref="productPhotoInput" type="file" accept="image/*" capture="environment"
                        id="product-photo" @change="onProductPhotoSelected" class="form-control mb-2"/>
                 <div v-if="productPhotoPreview" class="d-flex flex-wrap gap-2">
-                  <img :src="productPhotoPreview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="фото товара">
+                  <img :src="productPhotoPreview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="">
                 </div>
               </div>
             </div>
 
             <!-- Фото ошибки с ТСД — «Неверный офис» -->
             <div class="col-md-12" v-if="showOfficeIdPhoto">
-              <label for="office-id-photo" class="form-label">Фото ошибки с ТСД<sup class="text-danger">*</sup></label>
+              <label for="office-id-photo" class="form-label">{{ t('report.officeIdPhoto') }}<sup class="text-danger">*</sup></label>
               <div class="d-flex flex-column">
                 <input ref="officeIdPhotoInput" type="file" accept="image/*" capture="environment"
                        id="office-id-photo" @change="onOfficeIdPhotoSelected" class="form-control mb-2"/>
                 <div v-if="officeIdPhotoPreview" class="d-flex flex-wrap gap-2">
-                  <img :src="officeIdPhotoPreview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="фото ошибки с ТСД">
+                  <img :src="officeIdPhotoPreview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="">
                 </div>
               </div>
             </div>
@@ -105,10 +105,10 @@
             <div class="col-12">
               <div class="row">
                 <div class="col-12">
-                  <button :disabled="!canSubmit" type="button" @click.prevent="trySubmit" class="btn btn-dark w-100 fw-bold">Отправить</button>
+                  <button :disabled="!canSubmit" type="button" @click.prevent="trySubmit" class="btn btn-dark w-100 fw-bold">{{ t('common.submit') }}</button>
                 </div>
                 <div class="col-12 small text-danger" v-if="!canSubmit && !isLoading && errorType">
-                  Заполните все обязательные поля!
+                  {{ t('report.fillRequired') }}
                 </div>
               </div>
             </div>
@@ -119,7 +119,7 @@
 
     <Confirm
         v-if="successText"
-        title="Успешно!"
+        :title="t('common.successTitle')"
         :message="successText"
         @accept="() => successText = undefined"
         @cancel="successText = undefined;"
@@ -127,7 +127,7 @@
 
     <Confirm
         v-if="warningText"
-        title="Внимание!"
+        :title="t('common.warningTitle')"
         :message="warningText"
         :show-cancel="false"
         @accept="() => warningText = undefined"
@@ -136,7 +136,7 @@
 
     <Confirm
         v-if="errorText"
-        title="Ошибка!"
+        :title="t('common.errorTitle')"
         :message="errorText"
         @accept="() => errorText = undefined"
         @cancel="errorText = undefined;"
@@ -144,8 +144,8 @@
 
     <Confirm
         v-if="confirmSelect"
-        title="Подтверждение отправки"
-        message="Вы действительно хотите отправить форму?"
+        :title="t('common.confirmSendTitle')"
+        :message="t('common.confirmSendMessage')"
         @accept="() => makeSubmit()"
         @cancel="confirmSelect = false;"
     />
@@ -153,7 +153,10 @@
 </template>
 <script lang="ts" setup>
 import {computed, ref} from "vue";
+import {useI18n} from "vue-i18n";
 import Confirm from "@/components/Confirm.vue";
+
+const {t} = useI18n();
 
 const formRef = ref<HTMLFormElement>();
 
@@ -184,24 +187,24 @@ const successText = ref<string>();
 const warningText = ref<string>();
 const isLoading = ref(false);
 
-const errorOptions = [
-  {value: 'not_in_order', label: 'Товар не в заказе'},
-  {value: 'office_error', label: 'Неверный офис'},
-  {value: 'no_barcode', label: 'Без ID (ШК)'},
-  {value: 'other', label: 'Другая причина'},
-];
+const errorOptions = computed(() => [
+  {value: 'not_in_order', label: t('report.errNotInOrder')},
+  {value: 'office_error', label: t('report.errOffice')},
+  {value: 'no_barcode', label: t('report.errNoBarcode')},
+  {value: 'other', label: t('report.errOther')},
+]);
 
-const ttnOptions = [
-  {value: 'wb_gi', label: 'WB-GI'},
-  {value: 'wb_mp', label: 'WB-MP'},
-  {value: 'grid_number', label: 'Номер сетки'},
-];
+const ttnOptions = computed(() => [
+  {value: 'wb_gi', label: t('report.ttnWbGi')},
+  {value: 'wb_mp', label: t('report.ttnWbMp')},
+  {value: 'grid_number', label: t('report.ttnGrid')},
+]);
 
-// Попапы-инструкции по типу ошибки (после успешной отправки)
-const ALERTS: Record<string, string> = {
-  not_in_order: 'Положите в подписанную тару “Не в заказе”',
-  office_error: 'Положите в подписанную тару “Неверный офис”',
-  no_barcode: 'Положите в подписанную тару “Без ШК”',
+// Попапы-инструкции по типу ошибки (после успешной отправки) — ключи перевода
+const ALERT_KEYS: Record<string, string> = {
+  not_in_order: 'report.alertNotInOrder',
+  office_error: 'report.alertOffice',
+  no_barcode: 'report.alertNoBarcode',
 };
 
 // Условная видимость
@@ -356,23 +359,23 @@ const onSubmit = async () => {
     isLoading.value = false;
     if (res.status != 200) {
       const ddd = await res.json();
-      errorText.value = 'Не удалось отправить запрос (' + (ddd?.message ? ddd.message : res.status) + ')';
+      errorText.value = t('common.submitErrorStatus', {n: ddd?.message ? ddd.message : res.status});
       return;
     }
     const data = await res.json();
     if (data.success) {
-      if (ALERTS[submittedType]) {
-        warningText.value = ALERTS[submittedType];
+      if (ALERT_KEYS[submittedType]) {
+        warningText.value = t(ALERT_KEYS[submittedType]);
       } else {
-        successText.value = 'Успешно отправлено!';
+        successText.value = t('common.successSent');
       }
       clearData();
     } else {
-      errorText.value = 'Не удалось отправить запрос';
+      errorText.value = t('common.submitError');
     }
   } catch (e) {
     isLoading.value = false;
-    errorText.value = 'Ошибка при отправке запроса, попробуйте еще раз';
+    errorText.value = t('common.networkError');
   }
 };
 </script>

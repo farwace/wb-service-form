@@ -2,7 +2,7 @@
   <div class="container my-5">
     <div class="row justify-content-center">
       <div class="col-lg-9">
-        <h1 class="mb-3">Отписки грузчиков</h1>
+        <h1 class="mb-3">{{ t('reply.title') }}</h1>
         <form
             ref="formRef"
             :class="{
@@ -10,35 +10,35 @@
         }" @submit.prevent="onSubmit">
           <div class="row g-3">
             <div class="col-md-12">
-              <label for="receipt-number" class="form-label">Номер поступления<sup class="text-danger">*</sup></label>
+              <label for="receipt-number" class="form-label">{{ t('reply.receiptNumber') }}<sup class="text-danger">*</sup></label>
               <div class="d-flex">
                 <input v-model="receiptNumber" type="number" inputmode="numeric" class="form-control" autofocus id="receipt-number" name="receipt-number" required>
                 <span @click.prevent="receiptNumber = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-12">
-              <label for="reason" class="form-label">Причина разворота</label>
+              <label for="reason" class="form-label">{{ t('reply.reason') }}</label>
               <div class="d-flex">
                 <input v-model="reason" type="text" class="form-control" id="reason" name="reason" >
                 <span @click.prevent="reason = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-6">
-              <label for="vehicle-number" class="form-label">Номер ТС</label>
+              <label for="vehicle-number" class="form-label">{{ t('reply.vehicleNumber') }}</label>
               <div class="d-flex">
                 <input v-model="vehicleNumber" type="text" class="form-control" id="vehicle-number" name="vehicle-number" >
                 <span @click.prevent="vehicleNumber = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-6">
-              <label for="gate-numbers" class="form-label">Номера ворот</label>
+              <label for="gate-numbers" class="form-label">{{ t('reply.gateNumbers') }}</label>
               <div class="d-flex">
                 <input v-model="gateNumbers" type="text" class="form-control" id="gate-numbers" name="gate-numbers" >
                 <span @click.prevent="gateNumbers = ''" class="btn btn-warning">x</span>
               </div>
             </div>
             <div class="col-md-12">
-              <label for="depersonalization-video" class="form-label">Видео</label>
+              <label for="depersonalization-video" class="form-label">{{ t('reply.video') }}</label>
               <div class="d-flex flex-column">
                 <!-- Файл-инпут: сразу открывает камеру на планшете + позволяет выбрать несколько -->
                 <input
@@ -67,10 +67,10 @@
             <div class="col-12">
               <div class="row">
                 <div class="col-12">
-                  <button :disabled="!canSubmit" type="button" @click.prevent="trySubmit" class="btn btn-dark w-100 fw-bold" >Отправить</button>
+                  <button :disabled="!canSubmit" type="button" @click.prevent="trySubmit" class="btn btn-dark w-100 fw-bold" >{{ t('common.submit') }}</button>
                 </div>
                 <div class="col-12 small text-danger" v-if="!canSubmit && !isLoading">
-                  Заполните все поля!
+                  {{ t('reply.fillAllFields') }}
                 </div>
               </div>
             </div>
@@ -81,7 +81,7 @@
 
     <Confirm
         v-if="successText"
-        title="Успешно!"
+        :title="t('common.successTitle')"
         :message="successText"
         @accept="() => successText = undefined"
         @cancel="successText = undefined;"
@@ -89,7 +89,7 @@
 
     <Confirm
         v-if="errorText"
-        title="Ошибка!"
+        :title="t('common.errorTitle')"
         :message="errorText"
         @accept="() => errorText = undefined"
         @cancel="errorText = undefined;"
@@ -97,8 +97,8 @@
 
     <Confirm
         v-if="confirmSelect"
-        title="Подтверждение отправки"
-        message="Вы действительно хотите отправить форму?"
+        :title="t('common.confirmSendTitle')"
+        :message="t('common.confirmSendMessage')"
         @accept="() => makeSubmit()"
         @cancel="confirmSelect = false;"
     />
@@ -106,7 +106,10 @@
 </template>
 <script lang="ts" setup>
 import {computed, ref} from "vue";
+import {useI18n} from "vue-i18n";
 import Confirm from "@/components/Confirm.vue";
+
+const {t} = useI18n();
 
 const formRef = ref<HTMLFormElement>();
 
@@ -203,22 +206,22 @@ const onSubmit = async () => {
     isLoading.value = false;
     if(res.status != 200){
       const ddd = await res.json();
-      errorText.value = 'Не удалось отправить запрос (' + ddd?.message? ddd.message : res.status + ')';
+      errorText.value = t('common.submitErrorStatus', {n: ddd?.message ? ddd.message : res.status});
       return;
     }
     const data = await res.json();
     if(data.success){
-      successText.value = 'Успешно отправлено!';
+      successText.value = t('common.successSent');
       clearData();
     }
     else{
-      errorText.value = 'Не удалось отправить запрос';
+      errorText.value = t('common.submitError');
 
     }
   }
   catch (e){
     isLoading.value = false;
-    errorText.value = 'Ошибка при отправке запроса, попробуйте еще раз';
+    errorText.value = t('common.networkError');
   }
 }
 
