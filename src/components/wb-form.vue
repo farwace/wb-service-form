@@ -44,6 +44,9 @@
                 <div v-if="productBarcodePreview" class="d-flex flex-wrap gap-2">
                   <img :src="productBarcodePreview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="">
                 </div>
+                <div v-if="productBarcodeQrState === 'reading'" class="small text-muted">{{ t('report.qrReading') }}</div>
+                <div v-else-if="productBarcodeQrState === 'ok'" class="small text-success">{{ t('report.qrDetected') }}: <code>{{ productBarcodeQr }}</code></div>
+                <div v-else-if="productBarcodeQrState === 'fail'" class="small text-danger fw-bold">{{ t('report.qrFail') }}</div>
               </div>
             </div>
 
@@ -56,10 +59,36 @@
               </div>
             </div>
 
-            <!-- ТТН + номер — «Без ID (ШК)» -->
+            <!-- ID (ШК) товара №1/№2 — фото — «Два ШК» -->
+            <div class="col-md-12" v-if="showTwoBarcodes">
+              <label class="form-label d-block">{{ t('report.productBarcode1') }}<sup class="text-danger">*</sup></label>
+              <div class="d-flex flex-column">
+                <FileField class="mb-2" @change="onBarcode1Selected"/>
+                <div v-if="barcode1Preview" class="d-flex flex-wrap gap-2">
+                  <img :src="barcode1Preview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="">
+                </div>
+                <div v-if="barcode1QrState === 'reading'" class="small text-muted">{{ t('report.qrReading') }}</div>
+                <div v-else-if="barcode1QrState === 'ok'" class="small text-success">{{ t('report.qrDetected') }}: <code>{{ barcode1Qr }}</code></div>
+                <div v-else-if="barcode1QrState === 'fail'" class="small text-danger fw-bold">{{ t('report.qrFail') }}</div>
+              </div>
+            </div>
+            <div class="col-md-12" v-if="showTwoBarcodes">
+              <label class="form-label d-block">{{ t('report.productBarcode2') }}<sup class="text-danger">*</sup></label>
+              <div class="d-flex flex-column">
+                <FileField class="mb-2" @change="onBarcode2Selected"/>
+                <div v-if="barcode2Preview" class="d-flex flex-wrap gap-2">
+                  <img :src="barcode2Preview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="">
+                </div>
+                <div v-if="barcode2QrState === 'reading'" class="small text-muted">{{ t('report.qrReading') }}</div>
+                <div v-else-if="barcode2QrState === 'ok'" class="small text-success">{{ t('report.qrDetected') }}: <code>{{ barcode2Qr }}</code></div>
+                <div v-else-if="barcode2QrState === 'fail'" class="small text-danger fw-bold">{{ t('report.qrFail') }}</div>
+              </div>
+            </div>
+
+            <!-- ТТН + номер — «Без ID (ШК)», необязательно -->
             <template v-if="showTtn">
               <div class="col-md-12">
-                <label class="form-label d-block">{{ t('report.ttn') }}<sup class="text-danger">*</sup></label>
+                <label class="form-label d-block">{{ t('report.ttn') }}</label>
                 <div class="d-flex flex-wrap gap-3">
                   <div class="form-check" v-for="opt in ttnOptions" :key="opt.value">
                     <input class="form-check-input" type="radio" name="ttn_type" :id="'ttn-' + opt.value"
@@ -69,7 +98,7 @@
                 </div>
               </div>
               <div class="col-md-12">
-                <label for="ttn_number" class="form-label">{{ t('report.ttnNumber') }}<sup class="text-danger">*</sup></label>
+                <label for="ttn_number" class="form-label">{{ t('report.ttnNumber') }}</label>
                 <div class="d-flex">
                   <input :value="ttnNumber" @input="onTtnInput" type="text" inputmode="numeric" class="form-control" id="ttn_number" name="ttn_number">
                   <span @click.prevent="ttnNumber = ''" class="btn btn-warning">x</span>
@@ -149,10 +178,11 @@
   </div>
 </template>
 <script lang="ts" setup>
-import {computed, ref} from "vue";
+import {computed, ref, type Ref} from "vue";
 import {useI18n} from "vue-i18n";
 import Confirm from "@/components/Confirm.vue";
 import FileField from "@/components/file-field.vue";
+import {decodeQrFromFile} from "@/qr";
 
 const {t} = useI18n();
 
@@ -171,10 +201,39 @@ const ttnNumber = ref<string>('');
 // Фото
 const productBarcode = ref<File | null>(null);
 const productBarcodePreview = ref<string>('');
+const barcode1 = ref<File | null>(null);
+const barcode1Preview = ref<string>('');
+const barcode2 = ref<File | null>(null);
+const barcode2Preview = ref<string>('');
 const productPhoto = ref<File | null>(null);
 const productPhotoPreview = ref<string>('');
 const officeIdPhoto = ref<File | null>(null);
 const officeIdPhotoPreview = ref<string>('');
+
+// Декодирование QR с фото ШК (гибрид: фронт читает, бэк сверяет)
+type QrState = 'idle' | 'reading' | 'ok' | 'fail';
+const productBarcodeQr = ref<string>('');
+const productBarcodeQrState = ref<QrState>('idle');
+const barcode1Qr = ref<string>('');
+const barcode1QrState = ref<QrState>('idle');
+const barcode2Qr = ref<string>('');
+const barcode2QrState = ref<QrState>('idle');
+// Эпохи: отменяют устаревшие декоды, если пользователь выбрал другой файл
+const qrEpochs = {productBarcode: 0, barcode1: 0, barcode2: 0};
+
+async function decodeInto(key: 'productBarcode' | 'barcode1' | 'barcode2', file: File, text: Ref<string>, state: Ref<QrState>) {
+  const epoch = ++qrEpochs[key];
+  state.value = 'reading';
+  text.value = '';
+  const decoded = await decodeQrFromFile(file);
+  if (epoch !== qrEpochs[key]) return; // выбрали другое фото — результат устарел
+  if (decoded) {
+    text.value = decoded;
+    state.value = 'ok';
+  } else {
+    state.value = 'fail';
+  }
+}
 
 const confirmSelect = ref<boolean>(false);
 const errorText = ref<string>();
@@ -186,6 +245,7 @@ const errorOptions = computed(() => [
   {value: 'not_in_order', label: t('report.errNotInOrder')},
   {value: 'office_error', label: t('report.errOffice')},
   {value: 'no_barcode', label: t('report.errNoBarcode')},
+  {value: 'two_barcodes', label: t('report.errTwoBarcodes')},
   {value: 'other', label: t('report.errOther')},
 ]);
 
@@ -200,12 +260,14 @@ const ALERT_KEYS: Record<string, string> = {
   not_in_order: 'report.alertNotInOrder',
   office_error: 'report.alertOffice',
   no_barcode: 'report.alertNoBarcode',
+  two_barcodes: 'report.alertTwoBarcodes',
 };
 
 // Условная видимость
 const showErrorNote = computed(() => errorType.value === 'other');
 const showProductBarcode = computed(() => ['not_in_order', 'office_error'].includes(errorType.value));
 const showNeighbor = computed(() => errorType.value === 'no_barcode');
+const showTwoBarcodes = computed(() => errorType.value === 'two_barcodes');
 const showTtn = computed(() => errorType.value === 'no_barcode');
 const showProductPhoto = computed(() => ['not_in_order', 'office_error', 'no_barcode'].includes(errorType.value));
 const showOfficeIdPhoto = computed(() => errorType.value === 'office_error');
@@ -215,6 +277,7 @@ function onProductBarcodeSelected(files: File[]) {
   if (productBarcodePreview.value) URL.revokeObjectURL(productBarcodePreview.value);
   productBarcode.value = files[0];
   productBarcodePreview.value = URL.createObjectURL(productBarcode.value);
+  void decodeInto('productBarcode', files[0], productBarcodeQr, productBarcodeQrState);
 }
 
 function onProductPhotoSelected(files: File[]) {
@@ -229,6 +292,22 @@ function onOfficeIdPhotoSelected(files: File[]) {
   if (officeIdPhotoPreview.value) URL.revokeObjectURL(officeIdPhotoPreview.value);
   officeIdPhoto.value = files[0];
   officeIdPhotoPreview.value = URL.createObjectURL(officeIdPhoto.value);
+}
+
+function onBarcode1Selected(files: File[]) {
+  if (!files.length) return;
+  if (barcode1Preview.value) URL.revokeObjectURL(barcode1Preview.value);
+  barcode1.value = files[0];
+  barcode1Preview.value = URL.createObjectURL(barcode1.value);
+  void decodeInto('barcode1', files[0], barcode1Qr, barcode1QrState);
+}
+
+function onBarcode2Selected(files: File[]) {
+  if (!files.length) return;
+  if (barcode2Preview.value) URL.revokeObjectURL(barcode2Preview.value);
+  barcode2.value = files[0];
+  barcode2Preview.value = URL.createObjectURL(barcode2.value);
+  void decodeInto('barcode2', files[0], barcode2Qr, barcode2QrState);
 }
 
 // Разрешаем ввод только цифр
@@ -246,11 +325,16 @@ const canSubmit = computed(() => {
     case 'other':
       return !!errorNote.value;
     case 'not_in_order':
-      return !!(productBarcode.value && productPhoto.value);
+      // QR с фото «ID (ШК) товара» обязан быть распознан
+      return !!(productBarcode.value && productBarcodeQr.value && productPhoto.value);
     case 'office_error':
-      return !!(productBarcode.value && officeIdPhoto.value && productPhoto.value);
+      return !!(productBarcode.value && productBarcodeQr.value && officeIdPhoto.value && productPhoto.value);
     case 'no_barcode':
-      return !!(neighborBarcode.value && ttnType.value && ttnNumber.value && productPhoto.value);
+      // ТТН и номер ТТН — необязательны
+      return !!(neighborBarcode.value && productPhoto.value);
+    case 'two_barcodes':
+      // Оба QR с фото №1/№2 обязаны быть распознаны
+      return !!(barcode1.value && barcode1Qr.value && barcode2.value && barcode2Qr.value);
     default:
       return false;
   }
@@ -260,6 +344,9 @@ const clearProductBarcode = () => {
   if (productBarcodePreview.value) URL.revokeObjectURL(productBarcodePreview.value);
   productBarcodePreview.value = '';
   productBarcode.value = null;
+  qrEpochs.productBarcode++; // отменяем незавершённый декод
+  productBarcodeQr.value = '';
+  productBarcodeQrState.value = 'idle';
 };
 
 const clearProductPhoto = () => {
@@ -274,6 +361,24 @@ const clearOfficeIdPhoto = () => {
   officeIdPhoto.value = null;
 };
 
+const clearBarcode1 = () => {
+  if (barcode1Preview.value) URL.revokeObjectURL(barcode1Preview.value);
+  barcode1Preview.value = '';
+  barcode1.value = null;
+  qrEpochs.barcode1++;
+  barcode1Qr.value = '';
+  barcode1QrState.value = 'idle';
+};
+
+const clearBarcode2 = () => {
+  if (barcode2Preview.value) URL.revokeObjectURL(barcode2Preview.value);
+  barcode2Preview.value = '';
+  barcode2.value = null;
+  qrEpochs.barcode2++;
+  barcode2Qr.value = '';
+  barcode2QrState.value = 'idle';
+};
+
 // Сброс полей, не относящихся к выбранному типу ошибки
 const onTypeChange = () => {
   errorNote.value = undefined;
@@ -283,6 +388,8 @@ const onTypeChange = () => {
   clearProductBarcode();
   clearProductPhoto();
   clearOfficeIdPhoto();
+  clearBarcode1();
+  clearBarcode2();
 };
 
 const clearData = () => {
@@ -295,6 +402,8 @@ const clearData = () => {
   clearProductBarcode();
   clearProductPhoto();
   clearOfficeIdPhoto();
+  clearBarcode1();
+  clearBarcode2();
 };
 
 const trySubmit = () => {
@@ -319,13 +428,34 @@ const onSubmit = async () => {
   }
   if (showProductBarcode.value && productBarcode.value) {
     formData.append('product_barcode', productBarcode.value);
+    if (productBarcodeQr.value) {
+      formData.append('product_barcode_value', productBarcodeQr.value);
+    }
   }
   if (showNeighbor.value) {
     formData.append('neighbor_barcode', neighborBarcode.value || '');
   }
   if (showTtn.value) {
-    formData.append('ttn_type', ttnType.value || '');
-    formData.append('ttn_number', ttnNumber.value || '');
+    if (ttnType.value) {
+      formData.append('ttn_type', ttnType.value);
+    }
+    if (ttnNumber.value) {
+      formData.append('ttn_number', ttnNumber.value);
+    }
+  }
+  if (showTwoBarcodes.value) {
+    if (barcode1.value) {
+      formData.append('product_barcode_1', barcode1.value);
+      if (barcode1Qr.value) {
+        formData.append('product_barcode_1_value', barcode1Qr.value);
+      }
+    }
+    if (barcode2.value) {
+      formData.append('product_barcode_2', barcode2.value);
+      if (barcode2Qr.value) {
+        formData.append('product_barcode_2_value', barcode2Qr.value);
+      }
+    }
   }
   if (showProductPhoto.value && productPhoto.value) {
     formData.append('product_photo', productPhoto.value);
