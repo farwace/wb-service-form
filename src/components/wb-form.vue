@@ -14,20 +14,6 @@
                 <span @click.prevent="worker = ''" class="btn btn-warning">x</span>
               </div>
             </div>
-            <div class="col-md-6">
-              <label for="name" class="form-label">Имя<sup class="text-danger">*</sup></label>
-              <div class="d-flex">
-                <input v-model="name" type="text" class="form-control" id="name" name="name" required>
-                <span @click.prevent="name = ''" class="btn btn-warning">x</span>
-              </div>
-            </div>
-            <div class="col-md-12">
-              <label for="square" class="form-label">Квадрат сотрудника<sup class="text-danger">*</sup></label>
-              <div class="d-flex">
-                <input v-model="square" type="text" class="form-control" id="square" name="square" required>
-                <span @click.prevent="square = ''" class="btn btn-warning">x</span>
-              </div>
-            </div>
 
             <!-- Ошибка: радиокнопки -->
             <div class="col-md-12">
@@ -50,12 +36,15 @@
               </div>
             </div>
 
-            <!-- ID (ШК) товара — «Товар не в заказе» / «Неверный офис» -->
+            <!-- ID (ШК) товара — фото — «Товар не в заказе» / «Неверный офис» -->
             <div class="col-md-12" v-if="showProductBarcode">
-              <label for="product_barcode" class="form-label">ID (ШК) товара<sup class="text-danger">*</sup></label>
-              <div class="d-flex">
-                <input v-model="productBarcode" type="text" class="form-control" id="product_barcode" name="product_barcode">
-                <span @click.prevent="productBarcode = ''" class="btn btn-warning">x</span>
+              <label for="product-barcode-photo" class="form-label">ID (ШК) товара<sup class="text-danger">*</sup></label>
+              <div class="d-flex flex-column">
+                <input ref="productBarcodeInput" type="file" accept="image/*" capture="environment"
+                       id="product-barcode-photo" @change="onProductBarcodeSelected" class="form-control mb-2"/>
+                <div v-if="productBarcodePreview" class="d-flex flex-wrap gap-2">
+                  <img :src="productBarcodePreview" style="max-width: 180px; max-height: 180px; border-radius:6px;" alt="ID (ШК) товара">
+                </div>
               </div>
             </div>
 
@@ -68,7 +57,7 @@
               </div>
             </div>
 
-            <!-- ТТН + номер — «Товар не в заказе» / «Без ID (ШК)» -->
+            <!-- ТТН + номер — «Без ID (ШК)» -->
             <template v-if="showTtn">
               <div class="col-md-12">
                 <label class="form-label d-block">ТТН<sup class="text-danger">*</sup></label>
@@ -101,7 +90,7 @@
               </div>
             </div>
 
-            <!-- Фото ID Офиса — «Неверный офис» -->
+            <!-- Фото ошибки с ТСД — «Неверный офис» -->
             <div class="col-md-12" v-if="showOfficeIdPhoto">
               <label for="office-id-photo" class="form-label">Фото ошибки с ТСД<sup class="text-danger">*</sup></label>
               <div class="d-flex flex-column">
@@ -170,18 +159,18 @@ const formRef = ref<HTMLFormElement>();
 
 // Базовые поля
 const worker = ref<string>();
-const name = ref<string>();
-const square = ref<string>();
 const errorType = ref<string>('');
 
 // Условные поля
 const errorNote = ref<string>();
-const productBarcode = ref<string>();
 const neighborBarcode = ref<string>();
 const ttnType = ref<string>('');
 const ttnNumber = ref<string>('');
 
 // Фото
+const productBarcode = ref<File | null>(null);
+const productBarcodePreview = ref<string>('');
+const productBarcodeInput = ref<HTMLInputElement | null>(null);
 const productPhoto = ref<File | null>(null);
 const productPhotoPreview = ref<string>('');
 const productPhotoInput = ref<HTMLInputElement | null>(null);
@@ -219,9 +208,17 @@ const ALERTS: Record<string, string> = {
 const showErrorNote = computed(() => errorType.value === 'other');
 const showProductBarcode = computed(() => ['not_in_order', 'office_error'].includes(errorType.value));
 const showNeighbor = computed(() => errorType.value === 'no_barcode');
-const showTtn = computed(() => ['not_in_order', 'no_barcode'].includes(errorType.value));
+const showTtn = computed(() => errorType.value === 'no_barcode');
 const showProductPhoto = computed(() => ['not_in_order', 'office_error', 'no_barcode'].includes(errorType.value));
 const showOfficeIdPhoto = computed(() => errorType.value === 'office_error');
+
+function onProductBarcodeSelected(e: Event) {
+  const input = e.target as HTMLInputElement;
+  if (!input.files || !input.files.length) return;
+  if (productBarcodePreview.value) URL.revokeObjectURL(productBarcodePreview.value);
+  productBarcode.value = input.files[0];
+  productBarcodePreview.value = URL.createObjectURL(productBarcode.value);
+}
 
 function onProductPhotoSelected(e: Event) {
   const input = e.target as HTMLInputElement;
@@ -247,14 +244,14 @@ function onTtnInput(e: Event) {
 }
 
 const canSubmit = computed(() => {
-  if (!worker.value || !name.value || !square.value || !errorType.value || isLoading.value) {
+  if (!worker.value || !errorType.value || isLoading.value) {
     return false;
   }
   switch (errorType.value) {
     case 'other':
       return !!errorNote.value;
     case 'not_in_order':
-      return !!(productBarcode.value && ttnType.value && ttnNumber.value && productPhoto.value);
+      return !!(productBarcode.value && productPhoto.value);
     case 'office_error':
       return !!(productBarcode.value && officeIdPhoto.value && productPhoto.value);
     case 'no_barcode':
@@ -263,6 +260,13 @@ const canSubmit = computed(() => {
       return false;
   }
 });
+
+const clearProductBarcode = () => {
+  if (productBarcodeInput.value) productBarcodeInput.value.value = '';
+  if (productBarcodePreview.value) URL.revokeObjectURL(productBarcodePreview.value);
+  productBarcodePreview.value = '';
+  productBarcode.value = null;
+};
 
 const clearProductPhoto = () => {
   if (productPhotoInput.value) productPhotoInput.value.value = '';
@@ -281,24 +285,22 @@ const clearOfficeIdPhoto = () => {
 // Сброс полей, не относящихся к выбранному типу ошибки
 const onTypeChange = () => {
   errorNote.value = undefined;
-  productBarcode.value = undefined;
   neighborBarcode.value = undefined;
   ttnType.value = '';
   ttnNumber.value = '';
+  clearProductBarcode();
   clearProductPhoto();
   clearOfficeIdPhoto();
 };
 
 const clearData = () => {
   worker.value = undefined;
-  name.value = undefined;
-  square.value = undefined;
   errorType.value = '';
   errorNote.value = undefined;
-  productBarcode.value = undefined;
   neighborBarcode.value = undefined;
   ttnType.value = '';
   ttnNumber.value = '';
+  clearProductBarcode();
   clearProductPhoto();
   clearOfficeIdPhoto();
 };
@@ -318,15 +320,13 @@ const onSubmit = async () => {
   const formData = new FormData();
 
   formData.append('worker', worker.value || '');
-  formData.append('name', name.value || '');
-  formData.append('square', square.value || '');
   formData.append('error_type', errorType.value || '');
 
   if (errorType.value === 'other') {
     formData.append('error_note', errorNote.value || '');
   }
-  if (showProductBarcode.value) {
-    formData.append('product_barcode', productBarcode.value || '');
+  if (showProductBarcode.value && productBarcode.value) {
+    formData.append('product_barcode', productBarcode.value);
   }
   if (showNeighbor.value) {
     formData.append('neighbor_barcode', neighborBarcode.value || '');
